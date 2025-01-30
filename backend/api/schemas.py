@@ -33,8 +33,6 @@ class ChatMemberResponse(ChatMemberBase):
     id: int
     joined_at: datetime
     user: UserResponse
-    last_message: Optional[str] = None
-    last_sender_id: Optional[int] = None
 
     class Config:
         orm_mode = True
@@ -49,6 +47,8 @@ class ChatRoomCreate(ChatRoomBase):
 class ChatRoomResponse(ChatRoomBase):
     id: int
     created_at: datetime
+    last_message: Optional[str] = None
+    last_sender_id: Optional[int] = None
     members: List[ChatMemberResponse]
 
     class Config:
