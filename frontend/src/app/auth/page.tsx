@@ -1,7 +1,7 @@
-"use client";
-
 import { AuthScreen } from "@/features/auth/components/auth-screen";
 
-export default function AuthPage() {
+const AuthPage = () => {
   return <AuthScreen />;  
 }
+
+export default AuthPage;
