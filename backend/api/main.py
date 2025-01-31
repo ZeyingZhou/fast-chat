@@ -1,24 +1,33 @@
-from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from .database import engine
+from . import models
+from .routes import users, messages, chat_rooms, reactions
 
-import uvicorn
+# Create database tables
+models.Base.metadata.create_all(bind=engine)
 
-load_dotenv()
+app = FastAPI(title="Real-time Messenger API")
 
-app = FastAPI()
-
+# Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=["http://localhost:3000"],  # Add your frontend URL
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+# Mount static files directory
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
+
+# Include routers
+app.include_router(users.router)
+app.include_router(messages.router)
+app.include_router(chat_rooms.router)
+app.include_router(reactions.router)
+
 @app.get("/")
 def read_root():
-    return {"message": "Hello, World!"}
-
-if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    return {"message": "Welcome to Real-time Messenger API"}

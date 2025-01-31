@@ -16,12 +16,22 @@ def create_message(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user)
 ):
+    # Create the message
     db_message = models.Message(
         content=message.content,
         sender_id=current_user.id,
-        receiver_id=message.receiver_id
+        chat_room_id=message.chat_room_id
     )
     db.add(db_message)
+    
+    # Update the chat room's last message
+    chat_room = db.query(models.ChatRoom).filter(
+        models.ChatRoom.id == message.chat_room_id
+    ).first()
+    
+    chat_room.last_message = message.content
+    chat_room.last_sender_id = current_user.id
+    
     db.commit()
     db.refresh(db_message)
     return db_message
