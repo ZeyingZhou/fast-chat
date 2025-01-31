@@ -1,0 +1,22 @@
+.
+├── app
+│   ├── auth
+│   │   └── page.tsx
+│   ├── globals.css
+│   ├── layout.tsx
+│   └── page.tsx
+├── components
+│   └── ui
+│       └── button.tsx
+├── features
+│   └── auth
+│       ├── components
+│       │   ├── sign-in-card.tsx
+│       │   └── sign-up-card.tsx
+│       └── types.ts
+└── lib
+    ├── auth
+    │   └── types.ts
+    └── utils.ts
+
+10 directories, 10 files
