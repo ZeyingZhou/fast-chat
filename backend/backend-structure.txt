@@ -1,17 +1,67 @@
 .
 ├── api
 │   ├── __pycache__
-│   │   └── main.cpython-313.pyc
+│   │   ├── auth.cpython-313.pyc
+│   │   ├── database.cpython-313.pyc
+│   │   ├── main.cpython-313.pyc
+│   │   ├── models.cpython-313.pyc
+│   │   ├── schemas.cpython-313.pyc
+│   │   └── utils.cpython-313.pyc
+│   ├── alembic
+│   │   ├── README
+│   │   ├── __pycache__
+│   │   │   └── env.cpython-313.pyc
+│   │   ├── env.py
+│   │   ├── script.py.mako
+│   │   └── versions
+│   ├── alembic.ini
 │   ├── auth.py
+│   ├── chat_members
+│   │   ├── __pycache__
+│   │   │   ├── models.cpython-313.pyc
+│   │   │   └── schemas.cpython-313.pyc
+│   │   ├── models.py
+│   │   └── schemas.py
+│   ├── chat_rooms
+│   │   ├── __pycache__
+│   │   │   ├── models.cpython-313.pyc
+│   │   │   └── schemas.cpython-313.pyc
+│   │   ├── models.py
+│   │   └── schemas.py
 │   ├── database.py
 │   ├── main.py
-│   ├── models.py
+│   ├── messages
+│   │   ├── __pycache__
+│   │   │   ├── models.cpython-313.pyc
+│   │   │   └── schemas.cpython-313.pyc
+│   │   ├── models.py
+│   │   └── schemas.py
+│   ├── reactions
+│   │   ├── __pycache__
+│   │   │   ├── models.cpython-313.pyc
+│   │   │   └── schemas.cpython-313.pyc
+│   │   ├── models.py
+│   │   └── schemas.py
 │   ├── routes
+│   │   ├── __pycache__
+│   │   │   ├── chat_rooms.cpython-313.pyc
+│   │   │   ├── messages.cpython-313.pyc
+│   │   │   ├── reactions.cpython-313.pyc
+│   │   │   └── users.cpython-313.pyc
+│   │   ├── chat_rooms.py
 │   │   ├── messages.py
+│   │   ├── reactions.py
 │   │   └── users.py
-│   ├── schemas.py
+│   ├── users
+│   │   ├── __pycache__
+│   │   │   ├── models.cpython-313.pyc
+│   │   │   └── schemas.cpython-313.pyc
+│   │   ├── models.py
+│   │   └── schemas.py
 │   └── utils.py
 ├── backend-structure.txt
-└── requirements.txt
+├── requirements.txt
+└── uploads
+    └── profile_images
 
-4 directories, 11 files
+20 directories, 45 files

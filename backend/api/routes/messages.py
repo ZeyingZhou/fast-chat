@@ -2,7 +2,10 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List
 from ..database import get_db
-from .. import models, schemas
+from ..messages import models as messages_models
+from ..messages import schemas as messages_schemas
+from ..users import models as users_models
+
 from ..auth import get_current_user
 
 router = APIRouter(
@@ -10,14 +13,14 @@ router = APIRouter(
     tags=["messages"]
 )
 
-@router.post("/", response_model=schemas.MessageResponse)
+@router.post("/", response_model=messages_schemas.MessageResponse)
 def create_message(
-    message: schemas.MessageCreate,
+    message: messages_schemas.MessageCreate,
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_user)
+    current_user: users_models.User = Depends(get_current_user)
 ):
     # Create the message
-    db_message = models.Message(
+    db_message = messages_models.Message(
         content=message.content,
         sender_id=current_user.id,
         chat_room_id=message.chat_room_id
@@ -25,8 +28,8 @@ def create_message(
     db.add(db_message)
     
     # Update the chat room's last message
-    chat_room = db.query(models.ChatRoom).filter(
-        models.ChatRoom.id == message.chat_room_id
+    chat_room = db.query(messages_models.ChatRoom).filter(
+        messages_models.ChatRoom.id == message.chat_room_id
     ).first()
     
     chat_room.last_message = message.content
@@ -36,31 +39,31 @@ def create_message(
     db.refresh(db_message)
     return db_message
 
-@router.get("/", response_model=List[schemas.MessageResponse])
+@router.get("/", response_model=List[messages_schemas.MessageResponse])
 def get_messages(
     other_user_id: int,
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_user)
+    current_user: users_models.User = Depends(get_current_user)
 ):
-    messages = db.query(models.Message).filter(
+    messages = db.query(messages_models.Message).filter(
         (
-            (models.Message.sender_id == current_user.id) & 
-            (models.Message.receiver_id == other_user_id)
+            (messages_models.Message.sender_id == current_user.id) & 
+            (messages_models.Message.receiver_id == other_user_id)
         ) |
         (
-            (models.Message.sender_id == other_user_id) & 
-            (models.Message.receiver_id == current_user.id)
+            (messages_models.Message.sender_id == other_user_id) & 
+            (messages_models.Message.receiver_id == current_user.id)
         )
-    ).order_by(models.Message.created_at.desc()).all()
+    ).order_by(messages_models.Message.created_at.desc()).all()
     return messages
 
 @router.put("/{message_id}/read")
 def mark_message_as_read(
     message_id: int,
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_user)
+    current_user: users_models.User = Depends(get_current_user)
 ):
-    message = db.query(models.Message).filter(models.Message.id == message_id).first()
+    message = db.query(messages_models.Message).filter(messages_models.Message.id == message_id).first()
     if not message:
         raise HTTPException(status_code=404, detail="Message not found")
     if message.receiver_id != current_user.id:
