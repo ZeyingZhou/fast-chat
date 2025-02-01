@@ -14,6 +14,7 @@ from api.routes.users import router as users_router
 from api.routes.messages import router as messages_router
 from api.routes.chat_rooms import router as chat_rooms_router
 from api.routes.reactions import router as reactions_router
+from api.routes.auth import router as auth_router
 
 # Create database tables
 chat_members_models.Base.metadata.create_all(bind=engine)
@@ -37,6 +38,7 @@ app.add_middleware(
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 # Include routers
+app.include_router(auth_router)
 app.include_router(users_router)
 app.include_router(messages_router)
 app.include_router(chat_rooms_router)
