@@ -3,9 +3,10 @@ from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from sqlalchemy.orm import Session
 from typing import List
 
-from backend.api.auth import get_current_user
+from ..auth import get_current_user
 from ..database import get_db
-from .. import models, schemas
+from ..users import models as users_models
+from ..users import schemas as users_schemas
 from ..utils import get_password_hash
 import os
 from uuid import uuid4
@@ -18,16 +19,16 @@ router = APIRouter(
 UPLOAD_DIR = "uploads/profile_images"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
-@router.post("/", response_model=schemas.UserResponse)
-def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
+@router.post("/", response_model=users_schemas.UserResponse)
+def create_user(user: users_schemas.UserCreate, db: Session = Depends(get_db)):
     # Check if user exists
-    db_user = db.query(models.User).filter(models.User.email == user.email).first()
+    db_user = db.query(users_models.User).filter(users_models.User.email == user.email).first()
     if db_user:
         raise HTTPException(status_code=400, detail="Email already registered")
     
     # Create new user
     hashed_password = get_password_hash(user.password)
-    db_user = models.User(
+    db_user = users_models.User(
         username=user.username,
         email=user.email,
         hashed_password=hashed_password,
@@ -37,23 +38,23 @@ def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     db.refresh(db_user)
     return db_user
 
-@router.get("/", response_model=List[schemas.UserResponse])
+@router.get("/", response_model=List[users_schemas.UserResponse])
 def get_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    users = db.query(models.User).offset(skip).limit(limit).all()
+    users = db.query(users_models.User).offset(skip).limit(limit).all()
     return users
 
-@router.get("/{user_id}", response_model=schemas.UserResponse)
+@router.get("/{user_id}", response_model=users_schemas.UserResponse)
 def get_user(user_id: int, db: Session = Depends(get_db)):
-    db_user = db.query(models.User).filter(models.User.id == user_id).first()
+    db_user = db.query(users_models.User).filter(users_models.User.id == user_id).first()
     if db_user is None:
         raise HTTPException(status_code=404, detail="User not found")
     return db_user
 
-@router.post("/me/image", response_model=schemas.UserResponse)
+@router.post("/me/image", response_model=users_schemas.UserResponse)
 async def update_user_image(
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_user)
+    current_user: users_models.User = Depends(get_current_user)
 ):
     # Validate file type
     if not file.content_type.startswith("image/"):
@@ -84,11 +85,11 @@ async def update_user_image(
     
     return current_user
 
-@router.patch("/me", response_model=schemas.UserResponse)
+@router.patch("/me", response_model=users_schemas.UserResponse)
 def update_user_profile(
-    user_update: schemas.UserUpdate,
+    user_update: users_schemas.UserUpdate,
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_user)
+    current_user: users_models.User = Depends(get_current_user)
 ):
     for field, value in user_update.dict(exclude_unset=True).items():
         setattr(current_user, field, value)
@@ -97,16 +98,16 @@ def update_user_profile(
     db.refresh(current_user)
     return current_user
 
-@router.get("/me", response_model=schemas.UserResponse)
-def get_current_user_profile(current_user: models.User = Depends(get_current_user)):
+@router.get("/me", response_model=users_schemas.UserResponse)
+def get_current_user_profile(current_user: users_models.User = Depends(get_current_user)):
     return current_user
 
-@router.get("/{user_id}", response_model=schemas.UserResponse)
+@router.get("/{user_id}", response_model=users_schemas.UserResponse)
 def get_user_profile(
     user_id: int,
     db: Session = Depends(get_db)
 ):
-    user = db.query(models.User).filter(models.User.id == user_id).first()
+    user = db.query(users_models.User).filter(users_models.User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     return user
