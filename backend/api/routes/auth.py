@@ -15,10 +15,10 @@ from ..auth import (
 from ..users.schemas import UserCreate, UserResponse
 from ..auth import oauth2_scheme, ACCESS_TOKEN_EXPIRE_MINUTES
 
-router = APIRouter(prefix="/auth", tags=["auth"])
+router = APIRouter(prefix="/", tags=["auth"])
 
 @router.post("/signup", response_model=UserResponse)
-async def register(user: UserCreate, db: Session = Depends(get_db)):
+async def sign_up(user: UserCreate, db: Session = Depends(get_db)):
     # Check if user exists
     db_user = db.query(User).filter(User.email == user.email).first()
     if db_user:
@@ -40,8 +40,8 @@ async def register(user: UserCreate, db: Session = Depends(get_db)):
     db.refresh(db_user)
     return db_user
 
-@router.post("/token")
-async def login(
+@router.post("/signin")
+async def sign_in(
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_db)
 ):

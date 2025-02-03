@@ -1,22 +1,51 @@
 .
 ├── app
-│   ├── auth
+│   ├── (auth)
+│   │   ├── layout.tsx
+│   │   ├── signin
+│   │   │   └── page.tsx
+│   │   └── signup
+│   │       └── page.tsx
+│   ├── api
+│   │   └── auth
+│   │       └── [...nextauth]
+│   │           └── route.ts
+│   ├── chat
+│   │   ├── [chatId]
+│   │   │   └── page.tsx
+│   │   ├── layout.tsx
 │   │   └── page.tsx
 │   ├── globals.css
 │   ├── layout.tsx
 │   └── page.tsx
 ├── components
 │   └── ui
-│       └── button.tsx
+│       ├── alert.tsx
+│       ├── avatar.tsx
+│       ├── button.tsx
+│       ├── card.tsx
+│       ├── dropdown-menu.tsx
+│       ├── input.tsx
+│       ├── label.tsx
+│       └── separator.tsx
 ├── features
 │   └── auth
+│       ├── api
+│       │   └── use-current-user.ts
 │       ├── components
 │       │   ├── sign-in-card.tsx
-│       │   └── sign-up-card.tsx
+│       │   ├── sign-up-card.tsx
+│       │   └── user-button.tsx
 │       └── types.ts
-└── lib
-    ├── auth
-    │   └── types.ts
-    └── utils.ts
+├── hooks
+│   └── use-auth.ts
+├── lib
+│   ├── auth.config.ts
+│   ├── auth.ts
+│   └── utils.ts
+├── middleware.ts
+├── next-auth.d.ts
+└── providers
+    └── auth-provider.tsx
 
-10 directories, 10 files
+19 directories, 30 files
