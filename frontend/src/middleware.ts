@@ -1,12 +1,33 @@
 import NextAuth from "next-auth"
-import { authOptions } from "./lib/auth.config"
+import authConfig from "./auth.config"
 
-export const middleware = NextAuth(authOptions).auth
+const { auth } = NextAuth(authConfig)
 
+export default auth((req) => {
+  const isLoggedIn = !!req.auth
+  const { nextUrl } = req
+
+  const isApiRoute = nextUrl.pathname.startsWith('/api/')
+  const isAuthRoute = nextUrl.pathname.startsWith('/signin') || 
+                     nextUrl.pathname.startsWith('/signup') ||
+                     nextUrl.pathname.startsWith('/verify-email')
+
+  if (isAuthRoute) {
+    if (isLoggedIn) {
+      return Response.redirect(new URL('/conversations', nextUrl))
+    }
+    return null as unknown as Response
+  }
+
+  if (!isLoggedIn && !isApiRoute) {
+    return Response.redirect(new URL('/signin', nextUrl))
+  }
+
+  return null as unknown as Response
+})
+
+// Optionally, don't invoke Middleware on some paths
 export const config = {
   matcher: [
-    '/chat/:path*',
-    '/api/chat/:path*',
-    '/((?!api|_next/static|_next/image|images|favicon.ico|.*\\.svg|signin|signup).*)',
-  ]
+    "/((?!.+\\.[\\w]+$|_next).*)", "/", "/(api|trpc)(.*)"],
 }

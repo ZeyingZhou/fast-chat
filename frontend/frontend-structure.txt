@@ -10,14 +10,16 @@
 │   │   └── auth
 │   │       └── [...nextauth]
 │   │           └── route.ts
-│   ├── chat
-│   │   ├── [chatId]
+│   ├── conversations
+│   │   ├── [conversationId]
 │   │   │   └── page.tsx
 │   │   ├── layout.tsx
 │   │   └── page.tsx
 │   ├── globals.css
 │   ├── layout.tsx
 │   └── page.tsx
+├── auth.config.ts
+├── auth.ts
 ├── components
 │   └── ui
 │       ├── alert.tsx
@@ -30,8 +32,6 @@
 │       └── separator.tsx
 ├── features
 │   └── auth
-│       ├── api
-│       │   └── use-current-user.ts
 │       ├── components
 │       │   ├── sign-in-card.tsx
 │       │   ├── sign-up-card.tsx
@@ -40,12 +40,10 @@
 ├── hooks
 │   └── use-auth.ts
 ├── lib
-│   ├── auth.config.ts
 │   ├── auth.ts
+│   ├── prismadb.ts
+│   ├── user.ts
 │   └── utils.ts
-├── middleware.ts
-├── next-auth.d.ts
-└── providers
-    └── auth-provider.tsx
+└── middleware.ts
 
-19 directories, 30 files
+17 directories, 30 files
