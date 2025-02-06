@@ -15,9 +15,7 @@ export default async function ConversationsLayout({
     return (
         <Sidebar>
             <div>
-                <ConversationList
-                  
-                />
+                <ConversationList/>
             {children}
             </div>
         </Sidebar>
