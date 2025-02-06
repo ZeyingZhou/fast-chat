@@ -1,67 +1,30 @@
 .
-├── api
+├── __pycache__
+│   ├── database.cpython-313.pyc
+│   └── main.cpython-313.pyc
+├── alembic
+│   ├── README
 │   ├── __pycache__
-│   │   ├── auth.cpython-313.pyc
-│   │   ├── database.cpython-313.pyc
-│   │   ├── main.cpython-313.pyc
-│   │   ├── models.cpython-313.pyc
-│   │   ├── schemas.cpython-313.pyc
-│   │   └── utils.cpython-313.pyc
-│   ├── alembic
-│   │   ├── README
-│   │   ├── __pycache__
-│   │   │   └── env.cpython-313.pyc
-│   │   ├── env.py
-│   │   ├── script.py.mako
-│   │   └── versions
-│   ├── alembic.ini
+│   │   └── env.cpython-313.pyc
+│   ├── env.py
+│   ├── script.py.mako
+│   └── versions
+│       ├── __pycache__
+│       │   └── a357c0ab20a0_your_message.cpython-313.pyc
+│       └── a357c0ab20a0_your_message.py
+├── alembic.ini
+├── auth.py
+├── database.py
+├── main.py
+├── routes
 │   ├── auth.py
-│   ├── chat_members
-│   │   ├── __pycache__
-│   │   │   ├── models.cpython-313.pyc
-│   │   │   └── schemas.cpython-313.pyc
-│   │   ├── models.py
-│   │   └── schemas.py
-│   ├── chat_rooms
-│   │   ├── __pycache__
-│   │   │   ├── models.cpython-313.pyc
-│   │   │   └── schemas.cpython-313.pyc
-│   │   ├── models.py
-│   │   └── schemas.py
-│   ├── database.py
-│   ├── main.py
-│   ├── messages
-│   │   ├── __pycache__
-│   │   │   ├── models.cpython-313.pyc
-│   │   │   └── schemas.cpython-313.pyc
-│   │   ├── models.py
-│   │   └── schemas.py
-│   ├── reactions
-│   │   ├── __pycache__
-│   │   │   ├── models.cpython-313.pyc
-│   │   │   └── schemas.cpython-313.pyc
-│   │   ├── models.py
-│   │   └── schemas.py
-│   ├── routes
-│   │   ├── __pycache__
-│   │   │   ├── chat_rooms.cpython-313.pyc
-│   │   │   ├── messages.cpython-313.pyc
-│   │   │   ├── reactions.cpython-313.pyc
-│   │   │   └── users.cpython-313.pyc
-│   │   ├── chat_rooms.py
-│   │   ├── messages.py
-│   │   ├── reactions.py
-│   │   └── users.py
-│   ├── users
-│   │   ├── __pycache__
-│   │   │   ├── models.cpython-313.pyc
-│   │   │   └── schemas.cpython-313.pyc
-│   │   ├── models.py
-│   │   └── schemas.py
-│   └── utils.py
-├── backend-structure.txt
-├── requirements.txt
-└── uploads
-    └── profile_images
+│   └── users.py
+├── users
+│   ├── __pycache__
+│   │   ├── models.cpython-313.pyc
+│   │   └── schemas.cpython-313.pyc
+│   ├── models.py
+│   └── schemas.py
+└── utils.py
 
-20 directories, 45 files
+9 directories, 19 files
