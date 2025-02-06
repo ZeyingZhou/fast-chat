@@ -1,33 +1,49 @@
-import NextAuth from "next-auth"
-import authConfig from "./auth.config"
+import { RedirectToSignIn } from "@clerk/nextjs";
+import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import { NextResponse } from "next/server";
 
-const { auth } = NextAuth(authConfig)
+const publicRoutes = createRouteMatcher(['/sign-in(.*)', '/sign-up(.*)'])
+const protectedRoutes = createRouteMatcher(['/conversations(.*)'])
 
-export default auth((req) => {
-  const isLoggedIn = !!req.auth
-  const { nextUrl } = req
+export default clerkMiddleware(async (auth, request) => {
+  const { userId } = await auth()
+  const {pathname} = request.nextUrl
 
-  const isApiRoute = nextUrl.pathname.startsWith('/api/')
-  const isAuthRoute = nextUrl.pathname.startsWith('/signin') || 
-                     nextUrl.pathname.startsWith('/signup') ||
-                     nextUrl.pathname.startsWith('/verify-email')
-
-  if (isAuthRoute) {
-    if (isLoggedIn) {
-      return Response.redirect(new URL('/conversations', nextUrl))
+  if (!userId) {
+    // Allow access to public routes
+    if (publicRoutes(request)) {
+      return NextResponse.next();
     }
-    return null as unknown as Response
+    
+    // Redirect to sign-in for protected routes
+    RedirectToSignIn
+ 
   }
 
-  if (!isLoggedIn && !isApiRoute) {
-    return Response.redirect(new URL('/signin', nextUrl))
+  if (userId) {
+    // Redirect from auth pages to conversations
+    if (publicRoutes(request)) {
+      return NextResponse.redirect(new URL('/conversations', request.url));
+    }
+
+    // Redirect from root to conversations
+    if (pathname === '/') {
+      return NextResponse.redirect(new URL('/conversations', request.url));
+    }
+
+    // Protect routes that require authentication
+    if (protectedRoutes(request)) {
+      await auth.protect();
+    }
   }
+  return NextResponse.next()
+});
 
-  return null as unknown as Response
-})
-
-// Optionally, don't invoke Middleware on some paths
 export const config = {
   matcher: [
-    "/((?!.+\\.[\\w]+$|_next).*)", "/", "/(api|trpc)(.*)"],
-}
+    // Skip Next.js internals and all static files, unless found in search params
+    '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
+    // Always run for API routes
+    '/(.*)',
+  ],
+};

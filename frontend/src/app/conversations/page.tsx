@@ -1,9 +1,13 @@
-const ConversationPage = () => {
-    return (
-        <div>
-            <h1>Conversation</h1>
-        </div>
-    );
-};
+import { UserButton } from "@clerk/nextjs";
 
-export default ConversationPage;
+const ConversationsPage = () => {
+    return ( 
+        <div>
+            <div className="flex justify-between items-center">
+                <h1>Conversations</h1>
+                <UserButton />
+            </div>
+        </div>
+     );
+}
+export default ConversationsPage;

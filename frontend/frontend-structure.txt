@@ -1,26 +1,32 @@
 .
+├── actions
+│   ├── auth.ts
+│   └── user.ts
 ├── app
 │   ├── (auth)
 │   │   ├── layout.tsx
-│   │   ├── signin
-│   │   │   └── page.tsx
-│   │   └── signup
+│   │   ├── sign-in
+│   │   │   └── [[...sign-in]]
+│   │   │       └── page.tsx
+│   │   └── sign-up
+│   │       └── [[...sign-up]]
+│   │           └── page.tsx
+│   ├── (dashboard)
+│   │   └── conversations
+│   │       ├── [conversationId]
+│   │       │   └── page.tsx
+│   │       ├── layout.tsx
 │   │       └── page.tsx
-│   ├── api
-│   │   └── auth
-│   │       └── [...nextauth]
-│   │           └── route.ts
-│   ├── conversations
-│   │   ├── [conversationId]
-│   │   │   └── page.tsx
-│   │   ├── layout.tsx
-│   │   └── page.tsx
 │   ├── globals.css
 │   ├── layout.tsx
 │   └── page.tsx
-├── auth.config.ts
-├── auth.ts
 ├── components
+│   ├── auth
+│   │   ├── reset-password-form.tsx
+│   │   ├── sign-in-card.tsx
+│   │   ├── sign-up-card.tsx
+│   │   ├── user-button.tsx
+│   │   └── verify-email-form.tsx
 │   └── ui
 │       ├── alert.tsx
 │       ├── avatar.tsx
@@ -30,20 +36,13 @@
 │       ├── input.tsx
 │       ├── label.tsx
 │       └── separator.tsx
-├── features
-│   └── auth
-│       ├── components
-│       │   ├── sign-in-card.tsx
-│       │   ├── sign-up-card.tsx
-│       │   └── user-button.tsx
-│       └── types.ts
 ├── hooks
-│   └── use-auth.ts
+│   ├── use-auth.ts
+│   └── use-current-user.ts
 ├── lib
-│   ├── auth.ts
-│   ├── prismadb.ts
-│   ├── user.ts
 │   └── utils.ts
-└── middleware.ts
+├── middleware.ts
+└── schemas
+    └── auth.ts
 
-17 directories, 30 files
+17 directories, 29 files
