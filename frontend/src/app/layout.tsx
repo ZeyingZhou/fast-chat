@@ -8,7 +8,6 @@ import {
   SignedOut,
   UserButton,
 } from '@clerk/nextjs'
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 
 
 const inter = Inter({ subsets: ['latin'] })
