@@ -17,7 +17,6 @@ class UserUpdate(UserBase):
 
 class UserResponse(UserBase):
     id: int
-    is_social: bool
     created_at: datetime
     updated_at: datetime
 

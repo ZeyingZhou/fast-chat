@@ -1,22 +1,48 @@
 .
+├── actions
+│   ├── auth.ts
+│   └── user.ts
 ├── app
-│   ├── auth
-│   │   └── page.tsx
+│   ├── (auth)
+│   │   ├── layout.tsx
+│   │   ├── sign-in
+│   │   │   └── [[...sign-in]]
+│   │   │       └── page.tsx
+│   │   └── sign-up
+│   │       └── [[...sign-up]]
+│   │           └── page.tsx
+│   ├── (dashboard)
+│   │   └── conversations
+│   │       ├── [conversationId]
+│   │       │   └── page.tsx
+│   │       ├── layout.tsx
+│   │       └── page.tsx
 │   ├── globals.css
 │   ├── layout.tsx
 │   └── page.tsx
 ├── components
+│   ├── auth
+│   │   ├── reset-password-form.tsx
+│   │   ├── sign-in-card.tsx
+│   │   ├── sign-up-card.tsx
+│   │   ├── user-button.tsx
+│   │   └── verify-email-form.tsx
 │   └── ui
-│       └── button.tsx
-├── features
-│   └── auth
-│       ├── components
-│       │   ├── sign-in-card.tsx
-│       │   └── sign-up-card.tsx
-│       └── types.ts
-└── lib
-    ├── auth
-    │   └── types.ts
-    └── utils.ts
+│       ├── alert.tsx
+│       ├── avatar.tsx
+│       ├── button.tsx
+│       ├── card.tsx
+│       ├── dropdown-menu.tsx
+│       ├── input.tsx
+│       ├── label.tsx
+│       └── separator.tsx
+├── hooks
+│   ├── use-auth.ts
+│   └── use-current-user.ts
+├── lib
+│   └── utils.ts
+├── middleware.ts
+└── schemas
+    └── auth.ts
 
-10 directories, 10 files
+17 directories, 29 files

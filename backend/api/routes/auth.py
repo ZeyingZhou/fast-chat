@@ -13,12 +13,17 @@ from ..auth import (
     get_password_hash
 )
 from ..users.schemas import UserCreate, UserResponse
-from ..auth import oauth2_scheme, ACCESS_TOKEN_EXPIRE_MINUTES
+from ..auth import ACCESS_TOKEN_EXPIRE_MINUTES
+from pydantic import BaseModel
 
-router = APIRouter(prefix="/auth", tags=["auth"])
+router = APIRouter(prefix="", tags=["auth"])
+
+class SignInRequest(BaseModel):
+    email: str
+    password: str
 
 @router.post("/signup", response_model=UserResponse)
-async def register(user: UserCreate, db: Session = Depends(get_db)):
+async def sign_up(user: UserCreate, db: Session = Depends(get_db)):
     # Check if user exists
     db_user = db.query(User).filter(User.email == user.email).first()
     if db_user:
@@ -40,16 +45,14 @@ async def register(user: UserCreate, db: Session = Depends(get_db)):
     db.refresh(db_user)
     return db_user
 
-@router.post("/token")
-async def login(
-    form_data: OAuth2PasswordRequestForm = Depends(),
-    db: Session = Depends(get_db)
-):
-    user = authenticate_user(db, form_data.username, form_data.password)
+@router.post("/signin")
+async def sign_in(credentials: SignInRequest, db: Session = Depends(get_db)):
+    print(credentials)
+    user = authenticate_user(db, credentials.email, credentials.password)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password",
+            detail="Incorrect email or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
     
