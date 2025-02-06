@@ -4,14 +4,15 @@ from botocore.exceptions import ClientError
 import os
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv(".env.local")
 
 def get_dynamodb():
     return boto3.resource(
         'dynamodb',
-        aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
-        aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'),
-        region_name=os.getenv('AWS_REGION', 'us-east-1')
+        endpoint_url='http://localhost:8000',  # Point to local DynamoDB
+        aws_access_key_id='dummy',  # Dummy credentials for local development
+        aws_secret_access_key='dummy',
+        region_name='us-east-1'
     )
 
 dynamodb = get_dynamodb()
