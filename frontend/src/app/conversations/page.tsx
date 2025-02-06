@@ -1,13 +1,16 @@
-import { UserButton } from "@clerk/nextjs";
-
+'use client';
+import EmptyState from "./empty-state";
+import { cn } from "@/lib/utils";
+import useConversation from "@/hooks/use-conversation";
 const ConversationsPage = () => {
+    const { isOpen } = useConversation();
     return ( 
-        <div>
-            <div className="flex justify-between items-center">
-                <h1>Conversations</h1>
-                <UserButton />
-            </div>
-        </div>
+        <div className={cn(
+            'lg:pl-80 h-full lg:block', 
+            isOpen ? 'block' : 'hidden'
+          )}>
+            <EmptyState />
+          </div>
      );
 }
 export default ConversationsPage;
