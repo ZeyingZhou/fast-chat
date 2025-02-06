@@ -1,9 +1,9 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-
-# Remove the engine import and import what we need from database
 from api.database import create_tables
+from api.routes import webhooks
+from api.routes import users  # Add this import
 
 app = FastAPI(title="Real-time Messenger API")
 
@@ -15,6 +15,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Include webhook routes
+app.include_router(webhooks.router, prefix="/api", tags=["webhooks"])
+app.include_router(users.router, prefix="/api", tags=["users"])
 
 # Create DynamoDB tables on startup
 @app.on_event("startup")

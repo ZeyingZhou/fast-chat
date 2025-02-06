@@ -14,3 +14,5 @@ websockets==14.2
 
 # Type support and validation
 pydantic==2.10.6
+
+svix==1.16.0 
