@@ -1,10 +1,10 @@
 import { UserButton } from "@clerk/nextjs";
 import MobileFooter from "./mobile-footer";
-import DesktopSidebar from "./desktop-siderbar";
-import { currentUser } from '@clerk/nextjs/server'
+import DesktopSidebar from "./desktop-siderbar";    
+import getCurrentUser from "@/actions/getCurrentUser";
 
 const Sidebar = async ({children}: {children: React.ReactNode}) => {
-    const user = await currentUser();
+    const user = await getCurrentUser();
     
     const userData = user ? {
         id: user.id,
