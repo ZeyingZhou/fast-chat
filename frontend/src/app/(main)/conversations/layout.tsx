@@ -1,23 +1,23 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
-import Sidebar from "./sidebar";
-import ConversationList from "./conversation-list";
-export default async function ConversationsLayout({
+import ConversationList from "./components/conversation-list";
+import Sidebar from "./components/sidebar";
+const ConversationsLayout = async ({
     children,
 }: {
     children: React.ReactNode;
-}) {
+}) => {
     const { userId } = await auth()
   
     if (!userId) {
         redirect('/sign-in')
     }
     return (
-        <Sidebar>
-            <div>
-                <ConversationList/>
+        <>
+            <ConversationList/>
             {children}
-            </div>
-        </Sidebar>
+        </>
     );
 }
+
+export default ConversationsLayout;

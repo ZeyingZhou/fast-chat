@@ -1,6 +1,9 @@
 .
 ├── actions
 │   ├── auth.ts
+│   ├── getConversations.ts
+│   ├── getCurrentUser.ts
+│   ├── getUsers.ts
 │   └── user.ts
 ├── app
 │   ├── (auth)
@@ -12,14 +15,27 @@
 │   │       └── [[...sign-up]]
 │   │           └── page.tsx
 │   ├── (dashboard)
-│   │   └── conversations
-│   │       ├── [conversationId]
-│   │       │   └── page.tsx
-│   │       ├── layout.tsx
-│   │       └── page.tsx
+│   │   ├── conversations
+│   │   │   ├── [conversationId]
+│   │   │   │   └── page.tsx
+│   │   │   ├── components
+│   │   │   │   ├── conversation-box.tsx
+│   │   │   │   ├── conversation-list.tsx
+│   │   │   │   ├── desktop-item.tsx
+│   │   │   │   ├── desktop-siderbar.tsx
+│   │   │   │   ├── empty-state.tsx
+│   │   │   │   ├── mobile-footer.tsx
+│   │   │   │   ├── mobile-item.tsx
+│   │   │   │   └── sidebar.tsx
+│   │   │   ├── layout.tsx
+│   │   │   └── page.tsx
+│   │   ├── layout.tsx
+│   │   └── users
+│   │       ├── [userId]
+│   │       └── components
+│   │           └── user-list.tsx
 │   ├── globals.css
-│   ├── layout.tsx
-│   └── page.tsx
+│   └── layout.tsx
 ├── components
 │   ├── auth
 │   │   ├── reset-password-form.tsx
@@ -32,17 +48,24 @@
 │       ├── avatar.tsx
 │       ├── button.tsx
 │       ├── card.tsx
+│       ├── dialog.tsx
 │       ├── dropdown-menu.tsx
 │       ├── input.tsx
 │       ├── label.tsx
-│       └── separator.tsx
+│       ├── separator.tsx
+│       ├── sheet.tsx
+│       ├── skeleton.tsx
+│       └── tooltip.tsx
 ├── hooks
 │   ├── use-auth.ts
-│   └── use-current-user.ts
+│   ├── use-conversation.ts
+│   ├── use-current-user.ts
+│   ├── use-mobile.tsx
+│   └── use-routes.ts
 ├── lib
 │   └── utils.ts
 ├── middleware.ts
 └── schemas
     └── auth.ts
 
-17 directories, 29 files
+21 directories, 48 files

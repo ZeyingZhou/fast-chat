@@ -13,11 +13,9 @@ export default clerkMiddleware(async (auth, request) => {
     // Allow access to public routes
     if (publicRoutes(request)) {
       return NextResponse.next();
-    }
-    
+    }  
     // Redirect to sign-in for protected routes
     RedirectToSignIn
- 
   }
 
   if (userId) {
@@ -47,3 +45,4 @@ export const config = {
     '/(.*)',
   ],
 };
+
