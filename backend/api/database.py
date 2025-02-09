@@ -12,7 +12,7 @@ def get_dynamodb():
         endpoint_url='http://localhost:8000',  # Point to local DynamoDB
         aws_access_key_id='dummy',  # Dummy credentials for local development
         aws_secret_access_key='dummy',
-        region_name='us-east-1'
+        region_name='us-east-1',
     )
 
 dynamodb = get_dynamodb()
@@ -65,7 +65,7 @@ def create_tables():
             AttributeDefinitions=[
                 {'AttributeName': 'id', 'AttributeType': 'S'},
                 {'AttributeName': 'lastMessageAt', 'AttributeType': 'S'},
-                {'AttributeName': 'userId', 'AttributeType': 'S'}  # For querying user's conversations
+                {'AttributeName': 'userId', 'AttributeType': 'S'}
             ],
             GlobalSecondaryIndexes=[
                 {
@@ -130,38 +130,6 @@ def create_tables():
             print("Messages table already exists")
         else:
             raise e
-
-# Example document structures:
-example_user = {
-    'id': 'clerk_user_id',  # From Clerk
-    'email': 'user@example.com',  # From Clerk
-    'name': 'User Name',
-    'image': 'image_url',
-    'conversationIds': ['conv1', 'conv2'],
-    'seenMessageIds': ['msg1', 'msg2'],
-    'createdAt': '2024-02-06T12:00:00Z',
-    'updatedAt': '2024-02-06T12:00:00Z'
-}
-
-example_conversation = {
-    'id': 'conv1',
-    'name': 'Group Chat Name',
-    'isGroup': True,
-    'createdAt': '2024-02-06T12:00:00Z',
-    'lastMessageAt': '2024-02-06T12:00:00Z',
-    'userIds': ['user1', 'user2', 'user3'],
-    'messageIds': ['msg1', 'msg2']
-}
-
-example_message = {
-    'id': 'msg1',
-    'body': 'Message content',
-    'image': 'optional_image_url',
-    'createdAt': '2024-02-06T12:00:00Z',
-    'conversationId': 'conv1',
-    'senderId': 'user1',
-    'seenIds': ['user1', 'user2']
-}
 
 # Helper functions for DynamoDB operations
 def get_table(table_name: str):
