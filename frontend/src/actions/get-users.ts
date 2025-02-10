@@ -1,7 +1,9 @@
 import { clerkClient } from "@clerk/nextjs/server";
+import { auth } from "@clerk/nextjs";
 
 const getUsers = async () => {
     try {
+        const { userId } = auth();
         const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users`, {
             method: 'GET',
             headers: {
@@ -16,7 +18,8 @@ const getUsers = async () => {
         }
 
         const data = await response.json();
-        return data;
+        // Filter out the current user from the results
+        return data.filter((user: any) => user.id !== userId);
         
     } catch (error) {
         console.error('Failed to fetch users:', error);

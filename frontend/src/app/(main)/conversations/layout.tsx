@@ -7,6 +7,8 @@ const ConversationsLayout = async ({
 }: {
     children: React.ReactNode;
 }) => {
+    const conversations = await getConversations();
+    const users = await getUsers();
     const { userId } = await auth()
   
     if (!userId) {
