@@ -8,11 +8,11 @@ class ConversationBase(BaseModel):
     name: str
     userId: str
 
-class ConversationCreate(ConversationBase):
-    id: str
-    messageIds: List[str] = []
-    createdAt: datetime
-    updatedAt: datetime
+class ConversationCreate(BaseModel):
+    userId: str
+    isGroup: bool = False
+    members: list = []
+    name: Optional[str] = None
 
 class ConversationUpdate(BaseModel):
     name: Optional[str] = None

@@ -16,3 +16,5 @@ websockets==14.2
 pydantic==2.10.6
 
 svix==1.16.0 
+
+clerk-backend-api==1.7.2

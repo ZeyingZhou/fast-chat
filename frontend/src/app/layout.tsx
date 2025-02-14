@@ -2,11 +2,6 @@ import "./globals.css";
 import { Inter } from 'next/font/google'
 import {
   ClerkProvider,
-  SignInButton,
-  SignUpButton,
-  SignedIn,
-  SignedOut,
-  UserButton,
 } from '@clerk/nextjs'
 
 

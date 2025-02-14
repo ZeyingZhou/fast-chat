@@ -1,11 +1,17 @@
 "use client";
 
 import useRoutes from "@/hooks/use-routes";
-import { UserButton } from "@clerk/nextjs";
 import { User } from "@clerk/nextjs/server";
 import { useState } from "react";
 import { DesktopItem } from "./desktop-item";
 import { Avatar } from "@/components/ui/avatar";
+
+import dynamic from "next/dynamic";
+
+const UserButton = dynamic(() => import("@clerk/nextjs").then((mod) => mod.UserButton), {
+  ssr: false,
+});
+
 
 interface DesktopSidebarProps {
     currentUser: {

@@ -21,5 +21,4 @@ class UserCreate(UserBase):
 class UserUpdate(UserBase):
     updatedAt: str
 
-class UserResponse(UserCreate):
-    pass
+UserResponse = UserCreate

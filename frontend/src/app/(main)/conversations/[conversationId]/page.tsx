@@ -1,5 +1,5 @@
-import { UserButton } from "@clerk/nextjs";
-import { useParams } from "next/navigation";
+
+
 
 interface ConversationIdPageProps {     
     params: {
@@ -8,11 +8,9 @@ interface ConversationIdPageProps {
 }
 
 const ConversationIdPage: React.FC<ConversationIdPageProps> = ({ params }) => {
-    const conversationId = useParams();
     return ( 
         <div>
             <h1>Conversation {params.conversationId}</h1>
-            <UserButton />
         </div>
      );
 }

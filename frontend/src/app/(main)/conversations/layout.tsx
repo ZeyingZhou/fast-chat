@@ -2,6 +2,8 @@ import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import ConversationList from "./components/conversation-list";
 import Sidebar from "./components/sidebar";
+import getConversations from "@/actions/get-conversations";
+import getUsers from "@/actions/get-users";
 const ConversationsLayout = async ({
     children,
 }: {
@@ -16,7 +18,11 @@ const ConversationsLayout = async ({
     }
     return (
         <>
-            <ConversationList/>
+            <ConversationList
+                users={users}
+                initialItems={conversations}
+                title="Conversations"
+            />
             {children}
         </>
     );

@@ -24,7 +24,7 @@ def create_tables():
         dynamodb.create_table(
             TableName='users',
             KeySchema=[
-                {'AttributeName': 'id', 'KeyType': 'HASH'}  # Clerk user ID
+                {'AttributeName': 'id', 'KeyType': 'HASH'}
             ],
             AttributeDefinitions=[
                 {'AttributeName': 'id', 'AttributeType': 'S'},
@@ -48,7 +48,7 @@ def create_tables():
                 'WriteCapacityUnits': 5
             }
         )
-        print("Created users table")
+
     except ClientError as e:
         if e.response['Error']['Code'] == 'ResourceInUseException':
             print("Users table already exists")
@@ -64,8 +64,8 @@ def create_tables():
             ],
             AttributeDefinitions=[
                 {'AttributeName': 'id', 'AttributeType': 'S'},
-                {'AttributeName': 'lastMessageAt', 'AttributeType': 'S'},
-                {'AttributeName': 'userId', 'AttributeType': 'S'}
+                {'AttributeName': 'userId', 'AttributeType': 'S'},
+                {'AttributeName': 'lastMessageAt', 'AttributeType': 'S'}
             ],
             GlobalSecondaryIndexes=[
                 {
@@ -103,13 +103,26 @@ def create_tables():
             AttributeDefinitions=[
                 {'AttributeName': 'id', 'AttributeType': 'S'},
                 {'AttributeName': 'conversationId', 'AttributeType': 'S'},
-                {'AttributeName': 'createdAt', 'AttributeType': 'S'}
+                {'AttributeName': 'createdAt', 'AttributeType': 'S'},
+                {'AttributeName': 'senderId', 'AttributeType': 'S'}
             ],
             GlobalSecondaryIndexes=[
                 {
                     'IndexName': 'conversation-messages-index',
                     'KeySchema': [
                         {'AttributeName': 'conversationId', 'KeyType': 'HASH'},
+                        {'AttributeName': 'createdAt', 'KeyType': 'RANGE'}
+                    ],
+                    'Projection': {'ProjectionType': 'ALL'},
+                    'ProvisionedThroughput': {
+                        'ReadCapacityUnits': 5,
+                        'WriteCapacityUnits': 5
+                    }
+                },
+                {
+                    'IndexName': 'user-messages-index',
+                    'KeySchema': [
+                        {'AttributeName': 'senderId', 'KeyType': 'HASH'},
                         {'AttributeName': 'createdAt', 'KeyType': 'RANGE'}
                     ],
                     'Projection': {'ProjectionType': 'ALL'},
