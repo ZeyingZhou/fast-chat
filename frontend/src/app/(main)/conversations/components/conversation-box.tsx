@@ -58,7 +58,6 @@ const ConversationBox = ({data, selected}: ConversationBoxProps) => {
     return 'Started a conversation';
   }, [lastMessage]);
   const fallbackName = otherUser.name?.charAt(0).toUpperCase();
-  console.log(otherUser);
     return ( 
         <div
         onClick={handleClick}

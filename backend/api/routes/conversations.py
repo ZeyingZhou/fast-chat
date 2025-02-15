@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Header, Request
-from typing import Optional
+from typing import Optional, List
 
 from api.models.conversation import ConversationCreate
 
@@ -19,29 +19,17 @@ async def create_or_get_conversation(
     data: ConversationCreate,
     current_user = Depends(get_current_user),
 ):
-    print("data", data)
-    print("current_user", current_user)
-    
     if not current_user.user_id:
         raise HTTPException(status_code=400, detail="Unauthorized")
 
-    conversations = get_table('conversations')
+    conversations_table = get_table('conversations')
     users_table = get_table('users')
-    isGroup = data.isGroup
-    members = data.members
-    name = data.name
-    userId = data.userId
-
-    # Validate group chat requirements
-    if isGroup and (not members or len(members) < 2 or not name):
-        raise HTTPException(status_code=400, detail="Invalid data")
-
     current_time = datetime.utcnow().isoformat()
 
     try:
-        if isGroup:
+        if data.isGroup:
             conversation_id = str(uuid.uuid4())
-            all_user_ids = [str(member['value']) for member in members]
+            all_user_ids = [str(member['value']) for member in data.members]
             all_user_ids.append(str(current_user.user_id))
             
             # Get all users' details for denormalization
@@ -52,49 +40,57 @@ async def create_or_get_conversation(
                     user = user_response['Item']
                     users_data.append({
                         'id': user['id'],
-                        'username': user.get('username'),
                         'email': user.get('email'),
+                        'name': user.get('name'),
                         'image': user.get('image')
                     })
             
             conversation_data = {
                 'id': conversation_id,
-                'userId': str(current_user.user_id),
-                'lastMessageAt': current_time,
                 'createdAt': current_time,
+                'lastMessageAt': current_time,
+                'name': data.name,
+                'isGroup': 'true',
+                'messagesIds': [],
+                'messages': [],
                 'userIds': all_user_ids,
-                'users': users_data,  # Denormalized user data
-                'isGroup': True,
-                'name': name,
-                'messageIds': [],
-                'lastMessage': None
+                'users': users_data,
             }
-            
-            conversations.put_item(Item=conversation_data)
 
-
+            for participant in all_user_ids:
+                conversation_copy = {
+                    **conversation_data,
+                    'userId': participant
+                }
+                conversations_table.put_item(Item=conversation_copy)
 
             return conversation_data
 
         else:
+
             # Try to find existing direct conversation
-            response = conversations.scan(
-                FilterExpression='userIds = :uids AND isGroup = :is_group',
+            print("data.userId", data.userId)
+            other_user_id = data.userId
+            user_ids = sorted([str(current_user.user_id), other_user_id])
+            
+            # Check for existing conversation
+            response = conversations_table.query(
+                IndexName='user-direct-conversations-index',
+                KeyConditionExpression='userId = :uid AND isGroup = :is_group',
+                FilterExpression='userIds = :all_uids',
                 ExpressionAttributeValues={
-                    ':uids': sorted([str(current_user.user_id), str(userId)]),
-                    ':is_group': False
+                    ':uid': str(current_user.user_id),
+                    ':is_group': 'false',  # Changed from False to 'false' string
+                    ':all_uids': user_ids
                 }
             )
 
-            # If conversation exists, return it
             if response['Items']:
                 return response['Items'][0]
 
-            # Create new direct conversation
+            # Get both users' data for denormalization
             conversation_id = str(uuid.uuid4())
-            user_ids = sorted([str(current_user.user_id), str(userId)])
-            
-            # Get both users' details for denormalization
+
             users_data = []
             for user_id in user_ids:
                 user_response = users_table.get_item(Key={'id': user_id})
@@ -102,27 +98,31 @@ async def create_or_get_conversation(
                     user = user_response['Item']
                     users_data.append({
                         'id': user['id'],
-                        'name': user.get('name'),
                         'email': user.get('email'),
-                        'imageUrl': user.get('imageUrl')
+                        'name': user.get('name'),
+                        'image': user.get('image')
                     })
             
+
             conversation_data = {
                 'id': conversation_id,
-                'userId': user_ids[0],
-                'lastMessageAt': current_time,
                 'createdAt': current_time,
-                'userIds': user_ids,
-                'users': users_data,  # Denormalized user data
-                'isGroup': False,
+                'lastMessageAt': current_time,
                 'name': None,
-                'messageIds': [],
-                'lastMessage': None
+                'isGroup': 'false',
+                'messagesIds': [],
+                'messages': [],
+                'userIds': user_ids,
+                'users': users_data
             }
-            
-            conversations.put_item(Item=conversation_data)
 
- 
+            # Create entries for both participants
+            for participant_id in user_ids:
+                conversation_copy = {
+                    **conversation_data,
+                    'userId': participant_id
+                }
+                conversations_table.put_item(Item=conversation_copy)
 
             return conversation_data
 
@@ -132,34 +132,30 @@ async def create_or_get_conversation(
 
 
 
-
 @router.get("/conversations")
 async def get_conversations(
     current_user = Depends(get_current_user),
 ):
     if not current_user.user_id:
-        return []
+        raise HTTPException(status_code=401, detail="Unauthorized")
     
-    conversations = get_table('conversations')
-    user_id = str(current_user.user_id)
+    conversations_table = get_table('conversations')
     
     try:
-        response = conversations.scan(
-            FilterExpression='contains(userIds, :uid)',
+        # Query using GSI instead of scan
+        response = conversations_table.query(
+            IndexName='user-conversations-index',
+            KeyConditionExpression='userId = :uid',
             ExpressionAttributeValues={
-                ':uid': user_id
-            }
+                ':uid': str(current_user.user_id)
+            },
+            ScanIndexForward=False  # Get newest first
         )
         
-        conversations_list = sorted(
-            response['Items'],
-            key=lambda x: x.get('lastMessageAt', ''),
-            reverse=True
-        )
-        
-        return conversations_list
+        return response['Items']
         
     except ClientError as e:
         print(e.response['Error']['Message'])
-        return []
-
+        raise HTTPException(status_code=500, detail="Failed to fetch conversations")
+        
+  

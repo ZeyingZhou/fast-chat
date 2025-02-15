@@ -7,7 +7,6 @@ from datetime import datetime
 
 class UserBase(BaseModel):
     email: EmailStr
-    username: str = ""
     name: str = ""
     image: Optional[str] = None
 

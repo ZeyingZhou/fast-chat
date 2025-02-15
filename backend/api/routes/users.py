@@ -21,7 +21,6 @@ async def get_users(current_user = Depends(get_current_user)):
     items = response.get('Items', [])
     # Filter out the current user
     filtered_items = [item for item in items if item['id'] != user_id]
-    print("filtered_items", filtered_items)
     return filtered_items
 
 @router.get("/users/{user_id}", response_model=Dict)

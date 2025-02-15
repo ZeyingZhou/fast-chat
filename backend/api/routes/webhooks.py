@@ -62,7 +62,6 @@ async def handle_user_event(event: ClerkWebhook):
         user = UserCreate(
             id=data.get('id'),
             email=data.get('email_addresses')[0].get('email_address'),
-            username=data.get('username') or "",
             name=f"{data.get('first_name') or ''} {data.get('last_name') or ''}".strip(),
             image=data.get('image_url'),
             conversationIds=[],
@@ -76,7 +75,6 @@ async def handle_user_event(event: ClerkWebhook):
     elif event.type == ClerkWebhookEvent.USER_UPDATED:
         user_update = UserUpdate(
             email=data.get('email_addresses')[0].get('email_address'),
-            username=data.get('username') or "",
             name=f"{data.get('first_name') or ''} {data.get('last_name') or ''}".strip(),
             image=data.get('image_url'),
             updatedAt=datetime.now(timezone.utc).isoformat()
