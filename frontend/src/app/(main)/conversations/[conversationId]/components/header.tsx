@@ -34,7 +34,7 @@ const Header: React.FC<HeaderProps> = ({ conversation }) => {
                     <Link href="/conversations" className="lg:hidden block text-sky-500 hover:text-sky-600 transition cursor-pointer">
                         <ChevronLeftIcon className="size-6" />
                     </Link>
-                    <Avatar className="size-5 mr-1">
+                    <Avatar className="size-8 mr-1">
                         <AvatarImage className="rounded-md" src={otherUser.image}/>
                         <AvatarFallback>
                             {otherUser.name?.charAt(0)}

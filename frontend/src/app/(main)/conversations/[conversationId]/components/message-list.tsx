@@ -1,6 +1,6 @@
 const MessagesList = () => {
     return ( 
-        <div>
+        <div className="flex-1 overflow-y-auto">
             <h1>MessagesList</h1>
         </div>
     );

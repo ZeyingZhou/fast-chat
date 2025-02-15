@@ -14,7 +14,7 @@ interface ConversationIdPageProps {
 
 const ConversationIdPage: React.FC<ConversationIdPageProps> = async ({ params }) => {
     const conversation = await getConversationById(params.conversationId);
-    const messages = await getMessages(params.conversationId);
+    // const messages = await getMessages(params.conversationId);
 
     if(!conversation) {
         return (
@@ -29,8 +29,8 @@ const ConversationIdPage: React.FC<ConversationIdPageProps> = async ({ params })
         <div className="lg:pl-[464px] h-full">
             <div className="h-full flex flex-col">
                 <Header conversation={conversation} />
-                {/* <MessagesList initialMessages={messages} /> */}
-                {/* <ChatInput /> */}
+                <MessagesList />
+                <ChatInput />
             </div>
         </div>
      );

@@ -1,14 +1,25 @@
 from datetime import datetime
 import uuid
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from typing import List
 from ..models.message import MessageCreate, MessageUpdate, MessageResponse
 from ..database import get_table
 from ..auth import get_current_user
 from botocore.exceptions import ClientError
 from boto3.dynamodb.conditions import Key
+import boto3
+from botocore.exceptions import ClientError
+import os
+
+
 
 router = APIRouter()
+s3_client = boto3.client(
+    's3',
+    aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
+    aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'),
+    region_name=os.getenv('AWS_REGION')
+)
 
 @router.post("/messages")
 async def create_message(
@@ -71,3 +82,29 @@ async def create_message(
     except ClientError as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
+@router.post("/messages/upload")
+async def upload_file(
+    file: UploadFile = File(...),
+    conversation_id: str = Form(...)
+):
+    try:
+        # Generate unique filename
+        file_extension = file.filename.split('.')[-1]
+        new_filename = f"{uuid.uuid4()}.{file_extension}"
+        
+        # Upload to S3
+        s3_client.upload_fileobj(
+            file.file,
+            os.getenv('AWS_BUCKET_NAME'),
+            f"conversations/{conversation_id}/{new_filename}",
+            ExtraArgs={'ContentType': file.content_type}
+        )
+        
+        # Generate the URL for the uploaded file
+        image_url = f"https://{os.getenv('AWS_BUCKET_NAME')}.s3.{os.getenv('AWS_REGION')}.amazonaws.com/conversations/{conversation_id}/{new_filename}"
+        
+        return {"image_url": image_url}
+        
+    except ClientError as e:
+        raise HTTPException(status_code=500, detail=str(e))

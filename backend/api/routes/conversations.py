@@ -158,4 +158,21 @@ async def get_conversations(
         print(e.response['Error']['Message'])
         raise HTTPException(status_code=500, detail="Failed to fetch conversations")
         
-  
+
+@router.get("/conversations/{conversation_id}")
+async def get_conversation(
+    conversation_id: str,
+    current_user = Depends(get_current_user),
+):
+    if not current_user.user_id:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
+    conversations_table = get_table('conversations')
+
+    try:
+        response = conversations_table.get_item(Key={'id': conversation_id})
+        return response['Item']
+
+    except ClientError as e:
+        print(e.response['Error']['Message'])
+        raise HTTPException(status_code=500, detail="Failed to fetch conversation")
