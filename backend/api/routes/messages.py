@@ -10,6 +10,7 @@ from boto3.dynamodb.conditions import Key
 import boto3
 from botocore.exceptions import ClientError
 import os
+from ..websocket_manager import manager  # Import the shared manager instance
 
 
 
@@ -20,6 +21,17 @@ s3_client = boto3.client(
     aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'),
     region_name=os.getenv('AWS_REGION')
 )
+
+@router.get("/messages/{conversation_id}")
+async def get_messages(
+    conversation_id: str,
+    current_user = Depends(get_current_user)
+):
+    messages_table = get_table('messages')
+    messages = messages_table.query(
+        KeyConditionExpression=Key('conversationId').eq(conversation_id)
+    )
+    return messages['Items']
 
 @router.post("/messages")
 async def create_message(
@@ -77,6 +89,17 @@ async def create_message(
         )
 
         messages_table.put_item(Item=message_data)
+
+        # After successfully creating the message, notify other users in the conversation
+        conversation_response = conversations_table.get_item(Key={'id': data.conversationId})
+        if 'Item' in conversation_response:
+            for user_id in conversation_response['Item'].get('userIds', []):
+                if user_id != current_user.user_id:  # Don't send to the sender
+                    await manager.send_personal_message({
+                        'type': 'NEW_MESSAGE',
+                        'message': message_data
+                    }, user_id)
+
         return message_data
 
     except ClientError as e:
