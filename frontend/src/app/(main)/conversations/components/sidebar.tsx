@@ -1,4 +1,3 @@
-import { UserButton } from "@clerk/nextjs";
 import MobileFooter from "./mobile-footer";
 import DesktopSidebar from "./desktop-siderbar";    
 import getCurrentUser from "@/actions/get-current-user";

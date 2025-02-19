@@ -1,16 +1,21 @@
 import { clerkClient } from "@clerk/nextjs/server";
-import { auth } from "@clerk/nextjs";
+import { auth } from "@clerk/nextjs/server";
 
 const getUsers = async () => {
     try {
-        const { userId } = auth();
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users`, {
+        const { userId, getToken, sessionId } = await auth();
+        if (!userId) {
+            return [];
+        }
+
+        const token = await getToken();
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users?session_id=${sessionId}`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
             },
-            // Adding cache control if needed
-            cache: 'no-store', // or 'force-cache' if you want to cache
+            cache: 'no-store',
         });
 
         if (!response.ok) {
@@ -18,12 +23,11 @@ const getUsers = async () => {
         }
 
         const data = await response.json();
-        // Filter out the current user from the results
-        return data.filter((user: any) => user.id !== userId);
+        return data; // No need to filter here since backend already filters current user
         
     } catch (error) {
         console.error('Failed to fetch users:', error);
-        throw error; // Re-throw to handle in the component
+        return []; // Return empty array on error, matching get-conversations.ts pattern
     }
 };
 

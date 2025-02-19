@@ -1,11 +1,15 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from api.database import create_tables
-from api.routes import webhooks
-from api.routes import users  # Add this import
+from api.routes import messages, webhooks, websocket
+from api.routes import users, conversations
+from api.websocket_manager import ConnectionManager
 
 app = FastAPI(title="Real-time Messenger API")
+
+# Initialize the WebSocket manager
+manager = ConnectionManager()
 
 # Configure CORS
 app.add_middleware(
@@ -13,12 +17,15 @@ app.add_middleware(
     allow_origins=["http://localhost:3000"],  # Add your frontend URL
     allow_credentials=True,
     allow_methods=["*"],
-    allow_headers=["*"],
+    allow_headers=["*", "Authorization"],  # Explicitly include Authorization
 )
 
 # Include webhook routes
 app.include_router(webhooks.router, prefix="/api", tags=["webhooks"])
 app.include_router(users.router, prefix="/api", tags=["users"])
+app.include_router(conversations.router, prefix="/api", tags=["conversations"])
+app.include_router(messages.router, prefix="/api", tags=["messages"])
+app.include_router(websocket.router, tags=["websocket"])
 
 # Create DynamoDB tables on startup
 @app.on_event("startup")

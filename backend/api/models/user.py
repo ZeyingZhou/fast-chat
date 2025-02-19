@@ -7,7 +7,6 @@ from datetime import datetime
 
 class UserBase(BaseModel):
     email: EmailStr
-    username: str = ""
     name: str = ""
     image: Optional[str] = None
 
@@ -21,5 +20,4 @@ class UserCreate(UserBase):
 class UserUpdate(UserBase):
     updatedAt: str
 
-class UserResponse(UserCreate):
-    pass
+UserResponse = UserCreate

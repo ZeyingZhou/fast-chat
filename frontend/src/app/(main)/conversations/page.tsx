@@ -9,7 +9,7 @@ const ConversationsPage: React.FC = () => {
     
     return ( 
         <div className={cn(
-            'lg:pl-80 h-full lg:block', 
+            'lg:pl-[464px] h-full lg:block', 
             isOpen ? 'block' : 'hidden'
           )}>
             <EmptyState />

@@ -18,13 +18,12 @@ def get_dynamodb():
 dynamodb = get_dynamodb()
 
 def create_tables():
-    """Create DynamoDB tables matching messenger schema"""
     try:
-        # Users table - Extended Clerk user info
+        # Users table (keep as is since it's the source of truth for user data)
         dynamodb.create_table(
             TableName='users',
             KeySchema=[
-                {'AttributeName': 'id', 'KeyType': 'HASH'}  # Clerk user ID
+                {'AttributeName': 'id', 'KeyType': 'HASH'}
             ],
             AttributeDefinitions=[
                 {'AttributeName': 'id', 'AttributeType': 'S'},
@@ -37,16 +36,10 @@ def create_tables():
                         {'AttributeName': 'email', 'KeyType': 'HASH'}
                     ],
                     'Projection': {'ProjectionType': 'ALL'},
-                    'ProvisionedThroughput': {
-                        'ReadCapacityUnits': 5,
-                        'WriteCapacityUnits': 5
-                    }
+                    'ProvisionedThroughput': {'ReadCapacityUnits': 5, 'WriteCapacityUnits': 5}
                 }
             ],
-            ProvisionedThroughput={
-                'ReadCapacityUnits': 5,
-                'WriteCapacityUnits': 5
-            }
+            ProvisionedThroughput={'ReadCapacityUnits': 5, 'WriteCapacityUnits': 5}
         )
         print("Created users table")
     except ClientError as e:
@@ -54,9 +47,9 @@ def create_tables():
             print("Users table already exists")
         else:
             raise e
-
+        
     try:
-        # Conversations table
+        # Conversations table (denormalized)
         dynamodb.create_table(
             TableName='conversations',
             KeySchema=[
@@ -64,8 +57,9 @@ def create_tables():
             ],
             AttributeDefinitions=[
                 {'AttributeName': 'id', 'AttributeType': 'S'},
+                {'AttributeName': 'userId', 'AttributeType': 'S'},
                 {'AttributeName': 'lastMessageAt', 'AttributeType': 'S'},
-                {'AttributeName': 'userId', 'AttributeType': 'S'}
+                {'AttributeName': 'isGroup', 'AttributeType': 'S'}
             ],
             GlobalSecondaryIndexes=[
                 {
@@ -75,16 +69,19 @@ def create_tables():
                         {'AttributeName': 'lastMessageAt', 'KeyType': 'RANGE'}
                     ],
                     'Projection': {'ProjectionType': 'ALL'},
-                    'ProvisionedThroughput': {
-                        'ReadCapacityUnits': 5,
-                        'WriteCapacityUnits': 5
-                    }
+                    'ProvisionedThroughput': {'ReadCapacityUnits': 5, 'WriteCapacityUnits': 5}
+                },
+                {
+                    'IndexName': 'user-direct-conversations-index',
+                    'KeySchema': [
+                        {'AttributeName': 'userId', 'KeyType': 'HASH'},
+                        {'AttributeName': 'isGroup', 'KeyType': 'RANGE'}
+                    ],
+                    'Projection': {'ProjectionType': 'ALL'},
+                    'ProvisionedThroughput': {'ReadCapacityUnits': 5, 'WriteCapacityUnits': 5}
                 }
             ],
-            ProvisionedThroughput={
-                'ReadCapacityUnits': 5,
-                'WriteCapacityUnits': 5
-            }
+            ProvisionedThroughput={'ReadCapacityUnits': 5, 'WriteCapacityUnits': 5}
         )
         print("Created conversations table")
     except ClientError as e:
@@ -92,37 +89,20 @@ def create_tables():
             print("Conversations table already exists")
         else:
             raise e
-
+        
     try:
-        # Messages table
+        # Messages table (with denormalized user data)
         dynamodb.create_table(
             TableName='messages',
             KeySchema=[
-                {'AttributeName': 'id', 'KeyType': 'HASH'}
+                {'AttributeName': 'conversationId', 'KeyType': 'HASH'},
+                {'AttributeName': 'createdAt', 'KeyType': 'RANGE'}
             ],
             AttributeDefinitions=[
-                {'AttributeName': 'id', 'AttributeType': 'S'},
                 {'AttributeName': 'conversationId', 'AttributeType': 'S'},
                 {'AttributeName': 'createdAt', 'AttributeType': 'S'}
             ],
-            GlobalSecondaryIndexes=[
-                {
-                    'IndexName': 'conversation-messages-index',
-                    'KeySchema': [
-                        {'AttributeName': 'conversationId', 'KeyType': 'HASH'},
-                        {'AttributeName': 'createdAt', 'KeyType': 'RANGE'}
-                    ],
-                    'Projection': {'ProjectionType': 'ALL'},
-                    'ProvisionedThroughput': {
-                        'ReadCapacityUnits': 5,
-                        'WriteCapacityUnits': 5
-                    }
-                }
-            ],
-            ProvisionedThroughput={
-                'ReadCapacityUnits': 5,
-                'WriteCapacityUnits': 5
-            }
+            ProvisionedThroughput={'ReadCapacityUnits': 5, 'WriteCapacityUnits': 5}
         )
         print("Created messages table")
     except ClientError as e:
