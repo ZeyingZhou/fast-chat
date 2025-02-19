@@ -7,14 +7,13 @@ import MessagesList from "./components/message-list";
 
 
 interface ConversationIdPageProps {     
-    params: {
-        conversationId: string
-    }
+    params: Promise<{ conversationId: string }>
 }
 
 const ConversationIdPage: React.FC<ConversationIdPageProps> = async ({ params }) => {
-    const conversation = await getConversationById(params.conversationId);
-    // const messages = await getMessages(params.conversationId);
+    const { conversationId } = await params;
+    const conversation = await getConversationById(conversationId);
+    const messages = await getMessages(conversationId);
 
     if(!conversation) {
         return (
@@ -29,7 +28,7 @@ const ConversationIdPage: React.FC<ConversationIdPageProps> = async ({ params })
         <div className="lg:pl-[464px] h-full">
             <div className="h-full flex flex-col">
                 <Header conversation={conversation} />
-                <MessagesList />
+                <MessagesList initialMessages={messages} />
                 <ChatInput />
             </div>
         </div>

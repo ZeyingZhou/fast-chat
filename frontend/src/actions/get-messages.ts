@@ -9,10 +9,6 @@ const getMessages = async (conversationId: string) => {
             },
         });
         
-        if (!response.ok) {
-            throw new Error("Failed to fetch messages");
-        }
-
         const data = await response.json();
         return data;
     } catch (error) {
