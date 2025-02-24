@@ -7,36 +7,41 @@ from ..database import get_table
 
 router = APIRouter()
 
-@router.get("/users", response_model=List[Dict])
+@router.get("/users")
 async def get_users(current_user = Depends(get_current_user)):
     """
     Fetch all users except the current user
     """
-    if not current_user.id:
-        return []
+    if not current_user.user_id:
+        raise HTTPException(status_code=401, detail="Unauthorized")
     
-    user_id = str(current_user.user_id)
-    users = get_table('users')
-    response = users.scan()
-    items = response.get('Items', [])
-    # Filter out the current user
-    filtered_items = [item for item in items if item['id'] != user_id]
-    return filtered_items
+    users_table = get_table('users')
+    try:
+        response = users_table.scan()
+        # Filter out current user
+        users = [
+            user for user in response.get('Items', [])
+            if user['id'] != current_user.user_id
+        ]
+        return users
+    except Exception as e:
+        print(f"Error fetching users: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to fetch users")
 
-@router.get("/users/{user_id}", response_model=Dict)
+@router.get("/users/{user_id}")
 async def get_user(user_id: str):
     """
     Fetch a single user by ID
     """
-    users = get_table('users')
-    response = users.get_item(
-        Key={'id': user_id}
-    )
-    if not response['Item']:
-        raise HTTPException(status_code=404, detail="User not found")
-    
-    # Return first item directly since it's already in the correct format
-    return response['Item']
+    users_table = get_table('users')
+    try:
+        response = users_table.get_item(Key={'id': user_id})
+        if 'Item' not in response:
+            raise HTTPException(status_code=404, detail="User not found")
+        return response['Item']
+    except Exception as e:
+        print(f"Error fetching user: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to fetch user")
 
 @router.delete("/users/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_user(user_id: str):

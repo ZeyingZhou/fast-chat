@@ -20,7 +20,7 @@ const ConversationsLayout = async ({
         <>
             <ConversationList
                 users={users}
-                initialItems={conversations}
+                conversations={conversations}
                 title="Conversations"
             />
             {children}

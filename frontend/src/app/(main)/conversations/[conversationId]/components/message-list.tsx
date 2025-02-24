@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import useConversation from "@/hooks/use-conversation";
-import { FullMessageType } from "../../../../../../types";
+import { FullMessageType } from "../../../../../types";
 import MessageBox from "./message-box";
 import { useSocketContext } from "@/components/providers/socket-provider";
 

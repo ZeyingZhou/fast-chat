@@ -31,7 +31,6 @@ app.include_router(websocket.router, tags=["websocket"])
 @app.on_event("startup")
 async def startup_event():
     create_tables()
-
 # Mount static files directory
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 

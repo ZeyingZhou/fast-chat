@@ -2,36 +2,68 @@ from datetime import datetime
 import uuid
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from typing import List
-from ..models.message import MessageCreate, MessageUpdate, MessageResponse
+from ..models.message import MessageCreate
 from ..database import get_table
 from ..auth import get_current_user
-from botocore.exceptions import ClientError
 from boto3.dynamodb.conditions import Key
-import boto3
-from botocore.exceptions import ClientError
 import os
-from ..websocket_manager import manager  # Import the shared manager instance
-
-
+from ..websocket_manager import manager
 
 router = APIRouter()
-s3_client = boto3.client(
-    's3',
-    aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
-    aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'),
-    region_name=os.getenv('AWS_REGION')
-)
 
 @router.get("/messages/{conversation_id}")
 async def get_messages(
     conversation_id: str,
     current_user = Depends(get_current_user)
 ):
+    if not current_user.user_id:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
     messages_table = get_table('messages')
-    messages = messages_table.query(
-        KeyConditionExpression=Key('conversationId').eq(conversation_id)
-    )
-    return messages['Items']
+    try:
+        # Query messages using the conversation GSI
+        response = messages_table.query(
+            IndexName='by-conversation',
+            KeyConditionExpression='conversationId = :cid',
+            ExpressionAttributeValues={
+                ':cid': conversation_id
+            }
+        )
+  
+        if not response['Items']:
+            return []
+
+        # Get sender details for each message
+        messages = []
+        users_table = get_table('users')
+        
+        for message in response['Items']:
+            # Get sender info
+            sender_response = users_table.get_item(Key={'id': message['senderId']})
+            sender = sender_response.get('Item', {})
+            
+            # Format message to match frontend expectations
+            formatted_message = {
+                'id': message['id'],
+                'conversationId': message['conversationId'],
+                'senderId': message['senderId'],
+                'body': message.get('body'),
+                'image': message.get('image'),
+                'createdAt': message['createdAt'],
+                'sender': {
+                    'id': sender.get('id'),
+                    'name': sender.get('name'),
+                    'email': sender.get('email'),
+                    'image': sender.get('image')
+                }
+            }
+            messages.append(formatted_message)
+            
+        return messages
+
+    except Exception as e:
+        print(f"Error fetching messages: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to fetch messages")
 
 @router.post("/messages")
 async def create_message(
@@ -43,68 +75,52 @@ async def create_message(
 
     messages_table = get_table('messages')
     conversations_table = get_table('conversations')
-    users_table = get_table('users')
     current_time = datetime.utcnow().isoformat()
 
     try:
-        # Get sender's data for denormalization
-        sender_response = users_table.get_item(Key={'id': current_user.user_id})
-        if 'Item' not in sender_response:
-            raise HTTPException(status_code=404, detail="Sender not found")
-        
-        sender_data = {
-            'id': sender_response['Item']['id'],
-            'name': sender_response['Item'].get('name'),
-            'image': sender_response['Item'].get('image')
-        }
-
-        # Create message with denormalized sender data
         message_id = str(uuid.uuid4())
         message_data = {
             'id': message_id,
             'conversationId': data.conversationId,
-            'content': data.content,
+            'body': data.content,
+            'image': data.image if hasattr(data, 'image') else None,
             'senderId': current_user.user_id,
-            'sender': sender_data,
-            'seenIds': [current_user.user_id],
-            'seen': [sender_data],
             'createdAt': current_time
         }
 
-        # Update conversation's last message
-        conversation_update = {
-            'lastMessage': message_data,
-            'lastMessageAt': current_time,
-            'updatedAt': current_time
-        }
+        # Create message
+        messages_table.put_item(Item=message_data)
 
-        # Use transaction to update both tables
+        # Update conversation's lastMessageAt
         conversations_table.update_item(
             Key={'id': data.conversationId},
-            UpdateExpression='SET lastMessage = :msg, lastMessageAt = :time, updatedAt = :time',
+            UpdateExpression='SET lastMessageAt = :time',
             ExpressionAttributeValues={
-                ':msg': message_data,
                 ':time': current_time
             }
         )
 
-        messages_table.put_item(Item=message_data)
+        # Get conversation participants to notify
+        conv_users = get_table('conversation_users').query(
+            KeyConditionExpression='conversationId = :cid',
+            ExpressionAttributeValues={
+                ':cid': data.conversationId
+            }
+        )
 
-        # After successfully creating the message, notify other users in the conversation
-        conversation_response = conversations_table.get_item(Key={'id': data.conversationId})
-        if 'Item' in conversation_response:
-            for user_id in conversation_response['Item'].get('userIds', []):
-                if user_id != current_user.user_id:  # Don't send to the sender
-                    await manager.send_personal_message({
-                        'type': 'NEW_MESSAGE',
-                        'message': message_data
-                    }, user_id)
+        # Notify other participants
+        for user in conv_users.get('Items', []):
+            if user['userId'] != current_user.user_id:
+                await manager.send_personal_message({
+                    'type': 'NEW_MESSAGE',
+                    'message': message_data
+                }, user['userId'])
 
         return message_data
 
-    except ClientError as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
+    except Exception as e:
+        print(f"Error creating message: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to create message")
 
 @router.post("/messages/upload")
 async def upload_file(

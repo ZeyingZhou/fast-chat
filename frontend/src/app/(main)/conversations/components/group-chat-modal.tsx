@@ -1,4 +1,4 @@
-import { User } from "../../../../../types";
+import { User } from "../../../../types";
 
 interface GroupChatModalProps {
     users: User[];

@@ -1,6 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
+import { Conversation } from "../types";
 
-const getConversations = async () => {
+const getConversations = async (): Promise<Conversation[]> => {
     try {
         const { userId, getToken, sessionId } = await auth();
         if (!userId) {
@@ -19,6 +20,7 @@ const getConversations = async () => {
             throw new Error("Failed to fetch conversations");
         }
         const data = await response.json();
+        console.log(data)
         return data;
     } catch (error) {
         return [];

@@ -1,5 +1,5 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { User } from "../../../../../types";
+import { User } from "../../../../types";
 import { Loader } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useCallback } from "react";
@@ -23,8 +23,13 @@ const UserBox = ({data}: UserBoxProps) => {
                     userId: data.id
                 })
             })
+            .then((response) => response.json())
             .then((data) => {
-                router.push(`/conversations`);
+                console.log(data);
+                router.push(`/conversations/${data.id}`);
+            })
+            .catch((error) => {
+                console.error('Error:', error);
             })
             .finally(() => setIsLoading(false));
     }, [data, router]);

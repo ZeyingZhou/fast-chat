@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { format } from "date-fns";
 import { useUser } from "@clerk/nextjs";
-import { FullMessageType } from "../../../../../../types";
+import { FullMessageType } from "../../../../../types";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import Image from "next/image";

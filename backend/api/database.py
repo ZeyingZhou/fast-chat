@@ -49,7 +49,7 @@ def create_tables():
             raise e
         
     try:
-        # Conversations table (denormalized)
+        # Conversations table 
         dynamodb.create_table(
             TableName='conversations',
             KeySchema=[
@@ -57,25 +57,13 @@ def create_tables():
             ],
             AttributeDefinitions=[
                 {'AttributeName': 'id', 'AttributeType': 'S'},
-                {'AttributeName': 'userId', 'AttributeType': 'S'},
-                {'AttributeName': 'lastMessageAt', 'AttributeType': 'S'},
-                {'AttributeName': 'isGroup', 'AttributeType': 'S'}
+                {'AttributeName': 'lastMessageAt', 'AttributeType': 'S'}
             ],
             GlobalSecondaryIndexes=[
                 {
-                    'IndexName': 'user-conversations-index',
+                    'IndexName': 'by-last-message',
                     'KeySchema': [
-                        {'AttributeName': 'userId', 'KeyType': 'HASH'},
-                        {'AttributeName': 'lastMessageAt', 'KeyType': 'RANGE'}
-                    ],
-                    'Projection': {'ProjectionType': 'ALL'},
-                    'ProvisionedThroughput': {'ReadCapacityUnits': 5, 'WriteCapacityUnits': 5}
-                },
-                {
-                    'IndexName': 'user-direct-conversations-index',
-                    'KeySchema': [
-                        {'AttributeName': 'userId', 'KeyType': 'HASH'},
-                        {'AttributeName': 'isGroup', 'KeyType': 'RANGE'}
+                        {'AttributeName': 'lastMessageAt', 'KeyType': 'HASH'}
                     ],
                     'Projection': {'ProjectionType': 'ALL'},
                     'ProvisionedThroughput': {'ReadCapacityUnits': 5, 'WriteCapacityUnits': 5}
@@ -95,12 +83,23 @@ def create_tables():
         dynamodb.create_table(
             TableName='messages',
             KeySchema=[
-                {'AttributeName': 'conversationId', 'KeyType': 'HASH'},
-                {'AttributeName': 'createdAt', 'KeyType': 'RANGE'}
+                {'AttributeName': 'id', 'KeyType': 'HASH'}
             ],
             AttributeDefinitions=[
+                {'AttributeName': 'id', 'AttributeType': 'S'},
                 {'AttributeName': 'conversationId', 'AttributeType': 'S'},
                 {'AttributeName': 'createdAt', 'AttributeType': 'S'}
+            ],
+            GlobalSecondaryIndexes=[
+                {
+                    'IndexName': 'by-conversation',
+                    'KeySchema': [
+                        {'AttributeName': 'conversationId', 'KeyType': 'HASH'},
+                        {'AttributeName': 'createdAt', 'KeyType': 'RANGE'}
+                    ],
+                    'Projection': {'ProjectionType': 'ALL'},
+                    'ProvisionedThroughput': {'ReadCapacityUnits': 5, 'WriteCapacityUnits': 5}
+                }
             ],
             ProvisionedThroughput={'ReadCapacityUnits': 5, 'WriteCapacityUnits': 5}
         )
@@ -108,6 +107,36 @@ def create_tables():
     except ClientError as e:
         if e.response['Error']['Code'] == 'ResourceInUseException':
             print("Messages table already exists")
+        else:
+            raise e
+    try:
+        # Messages table (with denormalized user data)
+        dynamodb.create_table(
+            TableName='conversation_users',
+            KeySchema=[
+                {'AttributeName': 'conversationId', 'KeyType': 'HASH'},
+                {'AttributeName': 'userId', 'KeyType': 'RANGE'}
+            ],
+            AttributeDefinitions=[
+                {'AttributeName': 'conversationId', 'AttributeType': 'S'},
+                {'AttributeName': 'userId', 'AttributeType': 'S'}
+            ],
+            GlobalSecondaryIndexes=[
+                {
+                    'IndexName': 'by-user',
+                    'KeySchema': [
+                        {'AttributeName': 'userId', 'KeyType': 'HASH'}
+                    ],
+                    'Projection': {'ProjectionType': 'ALL'},
+                    'ProvisionedThroughput': {'ReadCapacityUnits': 5, 'WriteCapacityUnits': 5}
+                }
+            ],
+            ProvisionedThroughput={'ReadCapacityUnits': 5, 'WriteCapacityUnits': 5}
+        )
+        print("Created conversation_users table")
+    except ClientError as e:
+        if e.response['Error']['Code'] == 'ResourceInUseException':
+            print("conversation_users table already exists")
         else:
             raise e
 

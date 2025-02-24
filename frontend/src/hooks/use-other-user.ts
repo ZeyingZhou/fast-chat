@@ -1,9 +1,9 @@
 import { useSession } from "@clerk/nextjs";
 import { useMemo } from "react";
-import { FullConversationType } from "../../types";
-import { User } from "../../types";
+import { Conversation } from "@/types";
 
-const useOtherUser = (conversation: FullConversationType | { users: User[] }) => {
+const useOtherUser = (conversation: Conversation) => {
+  console.log(conversation)
   const { session } = useSession();
 
   const otherUser = useMemo(() => {
@@ -12,6 +12,7 @@ const useOtherUser = (conversation: FullConversationType | { users: User[] }) =>
     
     return otherUser[0];
   }, [session?.user.emailAddresses[0].emailAddress, conversation.users]);
+  
   return otherUser;
 };
 
