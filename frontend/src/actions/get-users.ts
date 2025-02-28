@@ -22,7 +22,6 @@ const getUsers = async () => {
         }
 
         const data = await response.json();
-        console.log(data);
         return data; // No need to filter here since backend already filters current user
         
     } catch (error) {

@@ -20,7 +20,6 @@ const getConversations = async (): Promise<Conversation[]> => {
             throw new Error("Failed to fetch conversations");
         }
         const data = await response.json();
-        console.log(data)
         return data;
     } catch (error) {
         return [];

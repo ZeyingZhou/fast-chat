@@ -2,12 +2,13 @@ from datetime import datetime
 import uuid
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from typing import List
-from ..models.message import MessageCreate
+from ..models.message import MessageCreate, FileData
 from ..database import get_table
 from ..auth import get_current_user
 from boto3.dynamodb.conditions import Key
 import os
 from ..websocket_manager import manager
+
 
 router = APIRouter()
 
@@ -57,6 +58,18 @@ async def get_messages(
                     'image': sender.get('image')
                 }
             }
+            
+            # Add file data if present
+            if 'file_url' in message:
+                formatted_message['file_url'] = message['file_url']
+                formatted_message['file_type'] = message.get('file_type')
+                formatted_message['file_name'] = message.get('file_name')
+                formatted_message['file_size'] = message.get('file_size')
+            
+            # Add multiple files if present
+            if 'files' in message:
+                formatted_message['files'] = message['files']
+            
             messages.append(formatted_message)
             
         return messages
@@ -75,7 +88,7 @@ async def create_message(
 
     messages_table = get_table('messages')
     conversations_table = get_table('conversations')
-    current_time = datetime.utcnow().isoformat()
+    current_time = datetime.now().isoformat()
 
     try:
         message_id = str(uuid.uuid4())
@@ -83,11 +96,22 @@ async def create_message(
             'id': message_id,
             'conversationId': data.conversationId,
             'body': data.content,
-            'image': data.image if hasattr(data, 'image') else None,
             'senderId': current_user.user_id,
             'createdAt': current_time
         }
-
+        
+        # Handle backward compatibility for single file
+        if data.file_url:
+            message_data['file_url'] = data.file_url
+            message_data['file_type'] = data.file_type
+            message_data['file_name'] = data.file_name
+            message_data['file_size'] = data.file_size
+        
+        # Handle multiple files
+        if data.files and len(data.files) > 0:
+            # Convert Pydantic models to dictionaries for DynamoDB
+            message_data['files'] = [file.dict() for file in data.files]
+        
         # Create message
         messages_table.put_item(Item=message_data)
 
@@ -122,28 +146,3 @@ async def create_message(
         print(f"Error creating message: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to create message")
 
-@router.post("/messages/upload")
-async def upload_file(
-    file: UploadFile = File(...),
-    conversation_id: str = Form(...)
-):
-    try:
-        # Generate unique filename
-        file_extension = file.filename.split('.')[-1]
-        new_filename = f"{uuid.uuid4()}.{file_extension}"
-        
-        # Upload to S3
-        s3_client.upload_fileobj(
-            file.file,
-            os.getenv('AWS_BUCKET_NAME'),
-            f"conversations/{conversation_id}/{new_filename}",
-            ExtraArgs={'ContentType': file.content_type}
-        )
-        
-        # Generate the URL for the uploaded file
-        image_url = f"https://{os.getenv('AWS_BUCKET_NAME')}.s3.{os.getenv('AWS_REGION')}.amazonaws.com/conversations/{conversation_id}/{new_filename}"
-        
-        return {"image_url": image_url}
-        
-    except ClientError as e:
-        raise HTTPException(status_code=500, detail=str(e))

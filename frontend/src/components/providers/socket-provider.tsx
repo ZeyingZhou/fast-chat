@@ -23,9 +23,9 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     if (!user?.id) return;
-
-    // Connect to WebSocket with user ID
-    const ws = new WebSocket(`ws://localhost:8000/api/ws/${user.id}`);
+    const wsUrl = `ws://localhost:8080/ws/${user.id}`;
+    console.log("Attempting to connect to WebSocket at:", wsUrl);
+    const ws = new WebSocket(wsUrl);
     
     ws.onopen = () => {
       console.log('Connected to WebSocket');

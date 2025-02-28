@@ -3,7 +3,6 @@ import { useMemo } from "react";
 import { Conversation } from "@/types";
 
 const useOtherUser = (conversation: Conversation) => {
-  console.log(conversation)
   const { session } = useSession();
 
   const otherUser = useMemo(() => {

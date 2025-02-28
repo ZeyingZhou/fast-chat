@@ -3,12 +3,14 @@
 import { useState } from "react";
 import { format } from "date-fns";
 import { useUser } from "@clerk/nextjs";
-import { FullMessageType } from "../../../../../types";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
+import { FileIcon, X } from "lucide-react";
+import { Message } from "@/types";
+
 interface MessageBoxProps {
-  data: FullMessageType;
+  data: Message;
   isLast?: boolean;
 }
 
@@ -21,13 +23,7 @@ const MessageBox: React.FC<MessageBoxProps> = ({
 
   const isOwn = user?.id === data?.senderId;
   
-  // Get list of users who've seen the message (excluding sender)
-  const seenList = (data.seenBy || [])
-    .filter((seen) => seen.userId !== data.senderId)
-    .map((seen) => seen.userId)
-    .join(', ');
 
-  // Dynamic classes based on message ownership and type
   const container = cn(
     'flex gap-3 p-4',
     isOwn && 'justify-end'
@@ -86,8 +82,39 @@ const MessageBox: React.FC<MessageBoxProps> = ({
           ) : (
             <div>{data.body}</div>
           )}
+          {/* {data.file_url && (
+            <div className="mt-2">
+              {data.file_type?.startsWith('image/') ? (
+                <div className="relative">
+                  <Image 
+                    alt={data.file_name || "Image"}
+                    height="200"
+                    width="300"
+                    src={data.file_url}
+                    className="object-cover rounded-md cursor-pointer"
+                    onClick={() => window.open(data.file_url, '_blank')}
+                  />
+                </div>
+              ) : (
+                <a 
+                  href={data.file_url} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="flex items-center p-2 bg-gray-100 rounded-md hover:bg-gray-200 transition"
+                >
+                  <FileIcon className="h-10 w-10 text-blue-500 mr-2" />
+                  <div>
+                    <p className="text-sm font-medium">{data.file_name}</p>
+                    <p className="text-xs text-gray-500">
+                      {data.file_type?.split('/')[1]?.toUpperCase()}
+                    </p>
+                  </div>
+                </a>
+              )}
+            </div>
+          )} */}
         </div>
-        {isLast && isOwn && seenList.length > 0 && (
+        {/* {isLast && isOwn && seenList.length > 0 && (
           <div className="
             text-xs 
             font-light 
@@ -95,7 +122,7 @@ const MessageBox: React.FC<MessageBoxProps> = ({
           ">
             {`Seen by ${seenList}`}
           </div>
-        )}
+        )} */}
       </div>
     </div>
    );
