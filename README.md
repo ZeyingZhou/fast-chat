@@ -136,7 +136,7 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 
 # Run the server
-uvicorn app.main:app --reload
+uvicorn api.main:app --reload
 ```
 
 ### Setting up Clerk Webhooks
