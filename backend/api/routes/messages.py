@@ -83,6 +83,7 @@ async def create_message(
     data: MessageCreate,
     current_user = Depends(get_current_user)
 ):
+    print(data)
     if not current_user.user_id:
         raise HTTPException(status_code=401, detail="Unauthorized")
 

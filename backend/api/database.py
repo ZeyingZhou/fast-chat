@@ -10,8 +10,8 @@ def get_dynamodb():
     return boto3.resource(
         'dynamodb',
         endpoint_url='http://localhost:8000',  # Point to local DynamoDB
-        aws_access_key_id='dummy',  # Dummy credentials for local development
-        aws_secret_access_key='dummy',
+        aws_access_key_id='local',  # Dummy credentials for local development
+        aws_secret_access_key='local',
         region_name='us-east-1',
     )
 
