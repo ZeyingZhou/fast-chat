@@ -81,6 +81,12 @@ const ChatInput: React.FC = () => {
           conversationId: conversationId
         }),
       });
+      const messageData = await response.json();
+      
+      // 3. Dispatch a local event to update your own UI immediately
+      window.dispatchEvent(new CustomEvent('new-message', { 
+        detail: messageData 
+      }));
     }
   
     const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {

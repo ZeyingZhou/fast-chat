@@ -32,6 +32,15 @@ export const useSocket = () => {
     }
   }, []);
 
+  // Add a function to send messages via WebSocket
+  const sendMessage = useCallback((message: any) => {
+    if (socket.current && socket.current.readyState === WebSocket.OPEN) {
+      socket.current.send(JSON.stringify(message));
+      return true;
+    }
+    return false;
+  }, []);
+
   useEffect(() => {
     connect();
 
@@ -42,5 +51,5 @@ export const useSocket = () => {
     };
   }, [connect]);
 
-  return { socket, addMessageHandler };
+  return { socket, addMessageHandler, sendMessage };
 }; 

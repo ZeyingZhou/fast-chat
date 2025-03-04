@@ -1,24 +1,26 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState } from 'react';
-import { useSocket } from '@/hooks/useSocket';
+import { useSocket } from '@/hooks/use-socket';
 import { useUser } from '@clerk/nextjs';
 
 type SocketContextType = {
   isConnected: boolean;
   sendTyping: (conversationId: string) => void;
   sendSeen: (conversationId: string) => void;
+  sendMessage: (message: any) => boolean;
 };
 
 const SocketContext = createContext<SocketContextType>({
   isConnected: false,
   sendTyping: () => {},
   sendSeen: () => {},
+  sendMessage: () => false,
 });
 
 export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
   const [isConnected, setIsConnected] = useState(false);
-  const { socket, addMessageHandler } = useSocket();
+  const { socket, addMessageHandler, sendMessage } = useSocket();
   const { user } = useUser();
 
   useEffect(() => {
@@ -102,7 +104,7 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
   }, [socket.current]);
 
   return (
-    <SocketContext.Provider value={{ isConnected, sendTyping, sendSeen }}>
+    <SocketContext.Provider value={{ isConnected, sendTyping, sendSeen, sendMessage }}>
       {children}
     </SocketContext.Provider>
   );

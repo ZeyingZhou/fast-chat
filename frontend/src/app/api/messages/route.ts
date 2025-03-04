@@ -1,14 +1,19 @@
+import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
 
 export async function POST(request: Request) {
   try {
+    const { getToken, sessionId } = await auth();
+    const token = await getToken();
     const body = await request.json();
     
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/messages`, {
+    console.log(body);
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/messages?session_id=${sessionId}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+         'Authorization': `Bearer ${token}`
       },
       body: JSON.stringify(body),
     });

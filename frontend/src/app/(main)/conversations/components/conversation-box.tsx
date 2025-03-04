@@ -6,29 +6,21 @@ import { format } from "date-fns";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { useCallback, useMemo } from "react";
+import AvatarGroup from "@/components/avatar-group";
+import AvatarUser from "@/components/avatar-user";
 interface ConversationBoxProps {
     conversation: Conversation;
     selected: boolean;
 }
 
 const ConversationBox = ({conversation, selected}: ConversationBoxProps) => {
-    const otherUser = useOtherUser(conversation);
-    const router = useRouter();
-    const { session } = useSession();
+  const otherUser = useOtherUser(conversation);
+  const router = useRouter();
    
-
-
   const handleClick = useCallback(() => {
     router.push(`/conversations/${conversation.id}`);
   }, [conversation, router]);
 
-
-
-  const userEmail = useMemo(() => session?.user?.emailAddresses[0]?.emailAddress,
-  [session?.user?.emailAddresses]);
-
-
-  const fallbackName = otherUser.name?.charAt(0).toUpperCase();
     return ( 
         <div
         onClick={handleClick}
@@ -47,13 +39,12 @@ const ConversationBox = ({conversation, selected}: ConversationBoxProps) => {
           selected ? 'bg-neutral-100' : 'bg-white'
         )}
       >
-        <Avatar className="size-8 mr-1">
-            <AvatarImage className="rounded-md" src={otherUser.image} />
-            <AvatarFallback>
-                {fallbackName}
-            </AvatarFallback>
-        </Avatar>
-
+        {conversation.isGroup === "true" ? (
+          <AvatarGroup users={conversation.users} />
+        ): (
+          <AvatarUser user={otherUser} />
+        )}
+  
         <div className="min-w-0 flex-1">
           <div className="focus:outline-none">
             <span className="absolute inset-0" aria-hidden="true" />
@@ -71,7 +62,6 @@ const ConversationBox = ({conversation, selected}: ConversationBoxProps) => {
                 {format(new Date(conversation.lastMessageAt), 'p')}
               </p>
             </div>
-           
           </div>
         </div>
       </div>
