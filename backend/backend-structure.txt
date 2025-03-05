@@ -1,30 +1,46 @@
 .
-├── __pycache__
-│   ├── database.cpython-313.pyc
-│   └── main.cpython-313.pyc
-├── alembic
-│   ├── README
+├── api
 │   ├── __pycache__
-│   │   └── env.cpython-313.pyc
-│   ├── env.py
-│   ├── script.py.mako
-│   └── versions
-│       ├── __pycache__
-│       │   └── a357c0ab20a0_your_message.cpython-313.pyc
-│       └── a357c0ab20a0_your_message.py
-├── alembic.ini
-├── auth.py
-├── database.py
-├── main.py
-├── routes
+│   │   ├── auth.cpython-313.pyc
+│   │   ├── database.cpython-313.pyc
+│   │   ├── main.cpython-313.pyc
+│   │   ├── s3_client.cpython-313.pyc
+│   │   ├── utils.cpython-313.pyc
+│   │   └── websocket_manager.cpython-313.pyc
 │   ├── auth.py
-│   └── users.py
-├── users
-│   ├── __pycache__
-│   │   ├── models.cpython-313.pyc
-│   │   └── schemas.cpython-313.pyc
-│   ├── models.py
-│   └── schemas.py
-└── utils.py
+│   ├── database.py
+│   ├── main.py
+│   ├── models
+│   │   ├── __pycache__
+│   │   │   ├── conversation.cpython-313.pyc
+│   │   │   ├── message.cpython-313.pyc
+│   │   │   ├── user.cpython-313.pyc
+│   │   │   └── webhook.cpython-313.pyc
+│   │   ├── conversation.py
+│   │   ├── message.py
+│   │   ├── user.py
+│   │   └── webhook.py
+│   ├── routes
+│   │   ├── __pycache__
+│   │   │   ├── conversations.cpython-313.pyc
+│   │   │   ├── messages.cpython-313.pyc
+│   │   │   ├── users.cpython-313.pyc
+│   │   │   ├── webhooks.cpython-313.pyc
+│   │   │   └── websocket.cpython-313.pyc
+│   │   ├── conversations.py
+│   │   ├── messages.py
+│   │   ├── users.py
+│   │   ├── webhooks.py
+│   │   └── websocket.py
+│   └── websocket_manager.py
+├── backend-structure.txt
+├── dynamodb
+│   ├── docker
+│   │   └── dynamodb
+│   │       └── shared-local-instance.db
+│   └── docker-compose.yml
+├── requirements.txt
+└── uploads
+    └── profile_images
 
-9 directories, 19 files
+12 directories, 32 files

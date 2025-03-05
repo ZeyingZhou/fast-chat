@@ -1,6 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
+import { Conversation } from "../types";
 
-const getConversations = async () => {
+const getConversations = async (): Promise<Conversation[]> => {
     try {
         const { userId, getToken, sessionId } = await auth();
         if (!userId) {

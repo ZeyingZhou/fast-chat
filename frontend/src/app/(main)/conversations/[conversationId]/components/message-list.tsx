@@ -2,12 +2,13 @@
 
 import { useEffect, useRef, useState } from "react";
 import useConversation from "@/hooks/use-conversation";
-import { FullMessageType } from "../../../../../../types";
+
 import MessageBox from "./message-box";
 import { useSocketContext } from "@/components/providers/socket-provider";
+import { Message } from "@/types";
 
 interface MessagesListProps {
-    initialMessages: FullMessageType[];
+    initialMessages: Message[];
 }
 
 const MessagesList: React.FC<MessagesListProps> = ({ initialMessages = [] }) => {

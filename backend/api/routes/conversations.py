@@ -23,113 +23,95 @@ async def create_or_get_conversation(
         raise HTTPException(status_code=400, detail="Unauthorized")
 
     conversations_table = get_table('conversations')
-    users_table = get_table('users')
+    conversation_users_table = get_table('conversation_users')
     current_time = datetime.utcnow().isoformat()
 
     try:
         if data.isGroup:
+            # Create group conversation
             conversation_id = str(uuid.uuid4())
             all_user_ids = [str(member['value']) for member in data.members]
             all_user_ids.append(str(current_user.user_id))
             
-            # Get all users' details for denormalization
-            users_data = []
-            for user_id in all_user_ids:
-                user_response = users_table.get_item(Key={'id': user_id})
-                if 'Item' in user_response:
-                    user = user_response['Item']
-                    users_data.append({
-                        'id': user['id'],
-                        'email': user.get('email'),
-                        'name': user.get('name'),
-                        'image': user.get('image')
-                    })
-            
+            # Create conversation - use 'true' string instead of True boolean
             conversation_data = {
                 'id': conversation_id,
                 'createdAt': current_time,
                 'lastMessageAt': current_time,
                 'name': data.name,
-                'isGroup': 'true',
-                'messagesIds': [],
-                'messages': [],
-                'userIds': all_user_ids,
-                'users': users_data,
+                'isGroup': 'true'  # Changed to string
             }
+            conversations_table.put_item(Item=conversation_data)
+            
+            # Create conversation_users entries
+            for user_id in all_user_ids:
+                conversation_users_table.put_item(Item={
+                    'conversationId': conversation_id,
+                    'userId': user_id,
+                    'joinedAt': current_time
+                })
 
-            for participant in all_user_ids:
-                conversation_copy = {
-                    **conversation_data,
-                    'userId': participant
-                }
-                conversations_table.put_item(Item=conversation_copy)
-
-            return conversation_data
+            # Get full conversation data for response
+            return await get_conversation_with_details(conversation_id)
 
         else:
-
             # Try to find existing direct conversation
-            print("data.userId", data.userId)
             other_user_id = data.userId
-            user_ids = sorted([str(current_user.user_id), other_user_id])
             
-            # Check for existing conversation
-            response = conversations_table.query(
-                IndexName='user-direct-conversations-index',
-                KeyConditionExpression='userId = :uid AND isGroup = :is_group',
-                FilterExpression='userIds = :all_uids',
+            # First, get all conversations for the current user
+            current_user_convs = conversation_users_table.query(
+                IndexName='by-user',
+                KeyConditionExpression='userId = :uid',
                 ExpressionAttributeValues={
-                    ':uid': str(current_user.user_id),
-                    ':is_group': 'false',  # Changed from False to 'false' string
-                    ':all_uids': user_ids
+                    ':uid': str(current_user.user_id)
                 }
-            )
+            ).get('Items', [])
 
-            if response['Items']:
-                return response['Items'][0]
+            # Then, get all conversations for the other user
+            other_user_convs = conversation_users_table.query(
+                IndexName='by-user',
+                KeyConditionExpression='userId = :uid',
+                ExpressionAttributeValues={
+                    ':uid': str(other_user_id)
+                }
+            ).get('Items', [])
 
-            # Get both users' data for denormalization
+            # Find common conversations
+            current_user_conv_ids = set(item['conversationId'] for item in current_user_convs)
+            other_user_conv_ids = set(item['conversationId'] for item in other_user_convs)
+            common_conv_ids = current_user_conv_ids.intersection(other_user_conv_ids)
+
+            # Check if any common conversation is a direct message (not a group)
+            for conv_id in common_conv_ids:
+                conv = conversations_table.get_item(Key={'id': conv_id})['Item']
+                if conv['isGroup'] == 'false':  # Remember we're using string 'false'
+                    return await get_conversation_with_details(conv_id)
+
+            # If no existing direct conversation found, create new one
             conversation_id = str(uuid.uuid4())
-
-            users_data = []
-            for user_id in user_ids:
-                user_response = users_table.get_item(Key={'id': user_id})
-                if 'Item' in user_response:
-                    user = user_response['Item']
-                    users_data.append({
-                        'id': user['id'],
-                        'email': user.get('email'),
-                        'name': user.get('name'),
-                        'image': user.get('image')
-                    })
-            
-
             conversation_data = {
                 'id': conversation_id,
                 'createdAt': current_time,
                 'lastMessageAt': current_time,
                 'name': None,
-                'isGroup': 'false',
-                'messagesIds': [],
-                'messages': [],
-                'userIds': user_ids,
-                'users': users_data
+                'isGroup': 'false'  # Changed to string
             }
+            
+            conversations_table.put_item(Item=conversation_data)
+            
+            # Add both users to conversation
+            for user_id in [str(current_user.user_id), other_user_id]:
+                conversation_users_table.put_item(Item={
+                    'conversationId': conversation_id,
+                    'userId': user_id,
+                    'joinedAt': current_time
+                })
 
-            # Create entries for both participants
-            for participant_id in user_ids:
-                conversation_copy = {
-                    **conversation_data,
-                    'userId': participant_id
-                }
-                conversations_table.put_item(Item=conversation_copy)
+            return await get_conversation_with_details(conversation_id)
 
-            return conversation_data
-
-    except ClientError as e:
-        print(e.response['Error']['Message'])
+    except Exception as e:
+        print(f"Error: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to process conversation")
-
 
 
 @router.get("/conversations")
@@ -139,25 +121,59 @@ async def get_conversations(
     if not current_user.user_id:
         raise HTTPException(status_code=401, detail="Unauthorized")
     
-    conversations_table = get_table('conversations')
+    conversation_users_table = get_table('conversation_users')
     
     try:
-        # Query using GSI instead of scan
-        response = conversations_table.query(
-            IndexName='user-conversations-index',
+        # Get all conversations for user
+        response = conversation_users_table.query(
+            IndexName='by-user',
             KeyConditionExpression='userId = :uid',
             ExpressionAttributeValues={
                 ':uid': str(current_user.user_id)
-            },
-            ScanIndexForward=False  # Get newest first
+            }
         )
+
+        # Get full details for each conversation
+        conversations = []
+        for item in response.get('Items', []):
+            conv_details = await get_conversation_with_details(item['conversationId'])
+            conversations.append(conv_details)
         
-        return response['Items']
+        # Sort by lastMessageAt
+        conversations.sort(key=lambda x: x['lastMessageAt'], reverse=True)
+        return conversations
         
-    except ClientError as e:
-        print(e.response['Error']['Message'])
+    except Exception as e:
+        print(f"Error: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to fetch conversations")
-        
+
+async def get_conversation_with_details(conversation_id: str):
+    """Helper function to get conversation with all related data"""
+    conversations_table = get_table('conversations')
+    conversation_users_table = get_table('conversation_users')
+    users_table = get_table('users')
+    
+    # Get base conversation
+    conversation = conversations_table.get_item(Key={'id': conversation_id})['Item']
+    
+    # Get participants
+    participants = conversation_users_table.query(
+        KeyConditionExpression='conversationId = :cid',
+        ExpressionAttributeValues={
+            ':cid': conversation_id
+        }
+    )
+    
+    # Get user details
+    users = []
+    for participant in participants.get('Items', []):
+        user_data = users_table.get_item(Key={'id': participant['userId']})
+        if 'Item' in user_data:
+            users.append(user_data['Item'])
+    
+    # Combine data
+    conversation['users'] = users
+    return conversation
 
 @router.get("/conversations/{conversation_id}")
 async def get_conversation(
@@ -167,11 +183,10 @@ async def get_conversation(
     if not current_user.user_id:
         raise HTTPException(status_code=401, detail="Unauthorized")
 
-    conversations_table = get_table('conversations')
-
     try:
-        response = conversations_table.get_item(Key={'id': conversation_id})
-        return response['Item']
+
+        conv_details = await get_conversation_with_details(conversation_id)
+        return conv_details
 
     except ClientError as e:
         print(e.response['Error']['Message'])

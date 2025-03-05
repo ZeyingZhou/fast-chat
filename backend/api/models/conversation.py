@@ -1,21 +1,18 @@
 from pydantic import BaseModel
 from datetime import datetime
-from typing import Optional, List
+from typing import Optional, List, Dict
 from .user import UserResponse
 from .message import MessageResponse
 
 class ConversationBase(BaseModel):
     name: Optional[str] = None
-    isGroup: Optional[bool] = False
-    userIds: List[str] = []
-    messagesIds: List[str] = []
+    isGroup: str = 'false'  # Changed to string to match DynamoDB
 
 class ConversationCreate(BaseModel):
-    isGroup: Optional[bool] = False
-    members: List[str] = []
+    isGroup: bool = False  # Keep as bool for API input
+    members: List[Dict[str, str]] = []  # For group members
     name: Optional[str] = None
-    userId: Optional[str] = None
-
+    userId: Optional[str] = None  # For direct messages
 
 class ConversationUpdate(BaseModel):
     name: Optional[str] = None
@@ -24,11 +21,8 @@ class ConversationUpdate(BaseModel):
 
 class ConversationResponse(BaseModel):
     id: str
-    createdAt: datetime
-    lastMessageAt: datetime
+    createdAt: str  # ISO format string
+    lastMessageAt: str  # ISO format string
     name: Optional[str] = None
-    isGroup: Optional[bool] = False
-    messagesIds: List[str] = []
-    userIds: List[str]
-    users: List[UserResponse]
-    messages: Optional[List[MessageResponse]] = None
+    isGroup: str = 'false'  # String to match DynamoDB
+    users: List[UserResponse]  # Users are fetched through conversation_users table

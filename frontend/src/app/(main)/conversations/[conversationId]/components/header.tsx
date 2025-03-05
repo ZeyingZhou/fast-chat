@@ -1,16 +1,15 @@
 "use client";
 import useOtherUser from "@/hooks/use-other-user";
-import { Conversation, User } from "../../../../../../types";
+import { Conversation } from "@/types";
 import { useState } from "react";
 import useActiveList from "@/hooks/use-active-list";
 import { useMemo } from "react";
-import { ChevronLeft, ChevronLeftIcon, EllipsisIcon, Link } from "lucide-react";
+import { ChevronLeftIcon, EllipsisIcon } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import Link from "next/link";
 
 interface HeaderProps {
-    conversation: Conversation & {
-        users: User[]; 
-    };
+    conversation: Conversation;
 }
 
 const Header: React.FC<HeaderProps> = ({ conversation }) => {
@@ -20,7 +19,7 @@ const Header: React.FC<HeaderProps> = ({ conversation }) => {
     const { members } = useActiveList();
     const isActive = members.indexOf(otherUser?.email!) !== -1;
     const statusText = useMemo(() => {
-      if (conversation.isGroup) {
+      if (conversation.isGroup === 'true') {
         return `${conversation.users.length} members`;
       }
   

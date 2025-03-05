@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import GroupChatModal from "./group-chat-modal";
-import { FullConversationType, User } from "../../../../../types";
+import { Conversation, User } from "../../../../types";
 import { cn } from "../../../../lib/utils";
 import { useRouter } from "next/navigation";
 import { auth } from "@clerk/nextjs/server";
@@ -11,12 +11,12 @@ import { useAuth } from "@clerk/nextjs";
 import { useUser } from "@clerk/nextjs";
 import ConversationBox from "./conversation-box";
 interface ConversationListProps {
-    initialItems: FullConversationType[];
+    conversations: Conversation[];
     users: User[];
     title?: string;
 }
-const ConversationList = ({initialItems, users, title}: ConversationListProps) => {
-    const [items, setItems] = useState<FullConversationType[]>(initialItems);
+const ConversationList = ({conversations, users, title}: ConversationListProps) => {
+    const [items, setItems] = useState<Conversation[]>(conversations);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const router = useRouter();
     const session = useAuth();
@@ -67,7 +67,7 @@ const ConversationList = ({initialItems, users, title}: ConversationListProps) =
             {items.map((item) => (
               <ConversationBox
                 key={item.id}
-                data={item}
+                conversation={item}
                 selected={conversationId === item.id}
               />
             ))}

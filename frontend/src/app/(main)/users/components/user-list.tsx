@@ -1,5 +1,5 @@
 "use client";
-import { User } from "../../../../../types";
+import { User } from "../../../../types";
 import UserBox from "./user-box";
 
 interface UserListProps {
