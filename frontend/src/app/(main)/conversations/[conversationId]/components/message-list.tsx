@@ -2,10 +2,9 @@
 
 import { useEffect, useRef, useState } from "react";
 import useConversation from "@/hooks/use-conversation";
-
-import MessageBox from "./message-box";
-import { useSocketContext } from "@/components/providers/socket-provider";
 import { Message } from "@/types";
+import MessageBox from "./message-box";
+import { useSocket } from "@/hooks/use-socket";
 
 interface MessagesListProps {
     initialMessages: Message[];
@@ -15,58 +14,54 @@ const MessagesList: React.FC<MessagesListProps> = ({ initialMessages = [] }) => 
     const bottomRef = useRef<HTMLDivElement>(null);
     const [messages, setMessages] = useState(initialMessages ?? []);
     const { conversationId } = useConversation();
-    const { sendSeen } = useSocketContext();
+    const { socket } = useSocket();
 
-    // Mark messages as seen when conversation opens or new messages arrive
+    // Scroll to bottom when messages change
     useEffect(() => {
-        sendSeen(conversationId);
-    }, [conversationId, messages.length]);
-
-    // Scroll to bottom on new messages
-    useEffect(() => {
-        bottomRef?.current?.scrollIntoView({ behavior: 'smooth' });
+        bottomRef.current?.scrollIntoView();
     }, [messages]);
 
-    // Listen for new messages
+    // Join conversation room
     useEffect(() => {
-        const handleNewMessage = (event: CustomEvent) => {
-            const newMessage = event.detail;
-            
-            // Avoid duplicate messages
-            setMessages((current) => {
-                if (current.some(msg => msg.id === newMessage.id)) {
-                    return current;
-                }
-                return [...current, newMessage];
-            });
-
-            // Mark as seen
-            sendSeen(conversationId);
-            
-            // Scroll to bottom
-            bottomRef?.current?.scrollIntoView({ behavior: 'smooth' });
-        };
-
-        // Listen for message updates (e.g., seen status)
-        const handleMessageUpdate = (event: CustomEvent) => {
-            const updatedMessage = event.detail;
-            setMessages((current) => 
-                current.map((msg) => 
-                    msg.id === updatedMessage.id ? updatedMessage : msg
-                )
-            );
-        };
-
-        // Add event listeners
-        window.addEventListener('new-message', handleNewMessage as EventListener);
-        window.addEventListener('message-seen', handleMessageUpdate as EventListener);
-
-        // Cleanup
+        if (!socket) return;
+        
+        console.log(`Joining conversation room: ${conversationId}`);
+        socket.emit('join_conversation', { conversationId });
+        
         return () => {
-            window.removeEventListener('new-message', handleNewMessage as EventListener);
-            window.removeEventListener('message-seen', handleMessageUpdate as EventListener);
+            console.log(`Leaving conversation room: ${conversationId}`);
+            socket.emit('leave_conversation', { conversationId });
         };
-    }, [conversationId, sendSeen]);
+    }, [socket, conversationId]);
+
+    // Listen for new messages - SEPARATE useEffect to avoid dependency issues
+    useEffect(() => {
+        if (!socket) return;
+        
+        console.log('Setting up message listener');
+        
+        const handleMessage = (data: any) => {
+            console.log('Received message:', data);
+            
+            if (data.type === 'NEW_MESSAGE') {
+                const message = data.message;
+                if (message.conversationId === conversationId) {
+                    console.log('Adding new message to state');
+                    setMessages(current => [...current, message]);
+                }
+            } else if (data.conversationId === conversationId) {
+                console.log('Adding direct message to state');
+                setMessages(current => [...current, data]);
+            }
+        };
+        
+        socket.on('message', handleMessage);
+        
+        return () => {
+            console.log('Removing message listener');
+            socket.off('message', handleMessage);
+        };
+    }, [socket, conversationId]); // Don't include messages in dependencies
 
     return (
         <div className="flex-1 overflow-y-auto">

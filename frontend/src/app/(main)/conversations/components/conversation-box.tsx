@@ -1,13 +1,15 @@
+"use client";
+
 import { useRouter } from "next/navigation";
 import { Conversation } from "../../../../types";
 import { useAuth, useSession } from "@clerk/nextjs";
 import useOtherUser from "@/hooks/use-other-user";
 import { format } from "date-fns";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
-import { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useState } from "react";
 import AvatarGroup from "@/components/avatar-group";
 import AvatarUser from "@/components/avatar-user";
+
 interface ConversationBoxProps {
     conversation: Conversation;
     selected: boolean;
@@ -16,6 +18,12 @@ interface ConversationBoxProps {
 const ConversationBox = ({conversation, selected}: ConversationBoxProps) => {
   const otherUser = useOtherUser(conversation);
   const router = useRouter();
+  const [displayName, setDisplayName] = useState<string>('');
+  
+  useEffect(() => {
+    // Set the display name after component mounts on client
+    setDisplayName(conversation.name || otherUser?.name || 'Unnamed');
+  }, [conversation.name, otherUser?.name]);
    
   const handleClick = useCallback(() => {
     router.push(`/conversations/${conversation.id}`);
@@ -50,7 +58,7 @@ const ConversationBox = ({conversation, selected}: ConversationBoxProps) => {
             <span className="absolute inset-0" aria-hidden="true" />
             <div className="flex justify-between items-center mb-1">
             <p className="text-md font-medium text-gray-900">
-              {conversation.name || otherUser.name}
+              {displayName}
             </p>
             <p 
                 className="

@@ -7,7 +7,7 @@ from ..database import get_table
 from ..auth import get_current_user
 from boto3.dynamodb.conditions import Key
 import os
-from ..websocket_manager import manager
+from ..socketio_manager import manager
 
 
 router = APIRouter()
@@ -83,16 +83,19 @@ async def create_message(
     data: MessageCreate,
     current_user = Depends(get_current_user)
 ):
-    print(data)
+    print("Received message data:", data)
     if not current_user.user_id:
         raise HTTPException(status_code=401, detail="Unauthorized")
 
     messages_table = get_table('messages')
     conversations_table = get_table('conversations')
+    users_table = get_table('users')
     current_time = datetime.now().isoformat()
 
     try:
         message_id = str(uuid.uuid4())
+        
+        # Basic message data for database
         message_data = {
             'id': message_id,
             'conversationId': data.conversationId,
@@ -102,48 +105,77 @@ async def create_message(
         }
         
         # Handle backward compatibility for single file
-        if data.file_url:
+        if hasattr(data, 'file_url') and data.file_url:
             message_data['file_url'] = data.file_url
             message_data['file_type'] = data.file_type
             message_data['file_name'] = data.file_name
             message_data['file_size'] = data.file_size
         
         # Handle multiple files
-        if data.files and len(data.files) > 0:
+        if hasattr(data, 'files') and data.files and len(data.files) > 0:
             # Convert Pydantic models to dictionaries for DynamoDB
             message_data['files'] = [file.dict() for file in data.files]
         
-        # Create message
+        # Create message in database
         messages_table.put_item(Item=message_data)
-
-        # Update conversation's lastMessageAt
+        
+        # Update conversation lastMessageAt
         conversations_table.update_item(
             Key={'id': data.conversationId},
-            UpdateExpression='SET lastMessageAt = :time',
+            UpdateExpression="set lastMessageAt=:t, lastMessageText=:m",
             ExpressionAttributeValues={
-                ':time': current_time
+                ':t': current_time,
+                ':m': data.content
             }
         )
-
-        # Get conversation participants to notify
-        conv_users = get_table('conversation_users').query(
-            KeyConditionExpression='conversationId = :cid',
-            ExpressionAttributeValues={
-                ':cid': data.conversationId
+        
+        # Get sender info to include in response
+        sender_response = users_table.get_item(Key={'id': current_user.user_id})
+        sender = sender_response.get('Item', {})
+        
+        # Format message response to match get_messages format
+        formatted_message = {
+            'id': message_id,
+            'conversationId': data.conversationId,
+            'senderId': current_user.user_id,
+            'body': data.content,
+            'createdAt': current_time,
+            'sender': {
+                'id': sender.get('id', current_user.user_id),
+                'name': sender.get('name', 'User'),
+                'email': sender.get('email', ''),
+                'image': sender.get('image')
             }
-        )
-
-        # Notify other participants
-        for user in conv_users.get('Items', []):
-            if user['userId'] != current_user.user_id:
-                await manager.send_personal_message({
+        }
+        
+        # Add file data if present
+        if hasattr(data, 'file_url') and data.file_url:
+            formatted_message['file_url'] = data.file_url
+            formatted_message['file_type'] = data.file_type
+            formatted_message['file_name'] = data.file_name
+            formatted_message['file_size'] = data.file_size
+        
+        # Add multiple files if present
+        if hasattr(data, 'files') and data.files and len(data.files) > 0:
+            formatted_message['files'] = [file.dict() for file in data.files]
+        
+        # Broadcast to all users in the conversation
+        try:
+            print(f"Broadcasting message to conversation {data.conversationId}")
+            await manager.broadcast_to_conversation(
+                {
                     'type': 'NEW_MESSAGE',
-                    'message': message_data
-                }, user['userId'])
-
-        return message_data
-
+                    'message': formatted_message  # Use the formatted message
+                },
+                data.conversationId,
+                exclude_user=current_user.user_id  # Don't send to the sender
+            )
+        except Exception as e:
+            print(f"Error broadcasting message: {str(e)}")
+            # Continue - don't fail the API call if broadcasting fails
+        
+        return formatted_message  # Return the formatted message
     except Exception as e:
         print(f"Error creating message: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to create message")
+        raise HTTPException(status_code=500, detail=f"Error creating message: {str(e)}")
 

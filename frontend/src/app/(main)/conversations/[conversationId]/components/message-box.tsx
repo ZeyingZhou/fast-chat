@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { useUser } from "@clerk/nextjs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -20,8 +20,14 @@ const MessageBox: React.FC<MessageBoxProps> = ({
 }) => {
   const { user } = useUser();
   const [imageModalOpen, setImageModalOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  
+  // Use useEffect to handle client-side rendering
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
-  const isOwn = user?.id === data?.senderId;
+  const isOwn = mounted && user?.id === data?.senderId;
   
 
   const container = cn(
