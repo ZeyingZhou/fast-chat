@@ -1,12 +1,12 @@
 "use client";
 import useOtherUser from "@/hooks/use-other-user";
 import { Conversation } from "@/types";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import useActiveList from "@/hooks/use-active-list";
 import { useMemo } from "react";
 import { ChevronLeftIcon, EllipsisIcon } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from "next/link";
+import AvatarUser from "@/components/avatar-user";
 
 interface HeaderProps {
     conversation: Conversation;
@@ -18,6 +18,12 @@ const Header: React.FC<HeaderProps> = ({ conversation }) => {
 
     const { members } = useActiveList();
     const isActive = members.indexOf(otherUser?.email!) !== -1;
+    const [displayName, setDisplayName] = useState<string>('');
+    
+    useEffect(() => {
+        setDisplayName(conversation.name || otherUser?.name || 'Unnamed');
+    }, [conversation.name, otherUser?.name]);
+
     const statusText = useMemo(() => {
       if (conversation.isGroup === 'true') {
         return `${conversation.users.length} members`;
@@ -25,6 +31,8 @@ const Header: React.FC<HeaderProps> = ({ conversation }) => {
   
       return isActive ? 'Active' : 'Offline'
     }, [conversation, isActive]);
+
+    
     
     return ( 
         <>
@@ -33,14 +41,9 @@ const Header: React.FC<HeaderProps> = ({ conversation }) => {
                     <Link href="/conversations" className="lg:hidden block text-sky-500 hover:text-sky-600 transition cursor-pointer">
                         <ChevronLeftIcon className="size-6" />
                     </Link>
-                    <Avatar className="size-8 mr-1">
-                        <AvatarImage className="rounded-md" src={otherUser.image}/>
-                        <AvatarFallback>
-                            {otherUser.name?.charAt(0)}
-                        </AvatarFallback>
-                    </Avatar>
+                    <AvatarUser user={otherUser} />
                     <div className="flex flex-col">
-                        <div>{conversation.name || otherUser.name}</div>
+                        <div>{displayName}</div>
                             <div className="text-sm font-light text-neutral-500">
                                 {statusText}
                             </div>

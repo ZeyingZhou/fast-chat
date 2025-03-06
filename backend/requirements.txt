@@ -9,8 +9,9 @@ boto3==1.29.0
 # Authentication
 python-jose==3.3.0
 
-# WebSocket support
-websockets==14.2
+# Socket.IO support (replacing WebSockets)
+python-socketio==5.11.1
+python-engineio==4.9.0
 
 # Type support and validation
 pydantic==2.10.6

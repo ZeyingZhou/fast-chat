@@ -19,7 +19,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Image from "next/image";
 import { EmojiPopover } from "./emoji-popover";
-import getUploadUrl from "@/actions/get-upload-url";
+import { useSocket } from "@/hooks/use-socket";
+
 
 // Define file data interface for better type safety
 interface FileData {
@@ -36,6 +37,7 @@ const ChatInput: React.FC = () => {
     const [attachedFiles, setAttachedFiles] = useState<FileData[]>([]);
     // Add a state to track the message content
     const [messageContent, setMessageContent] = useState('');
+    const { isConnected, sendTyping, sendChatMessage } = useSocket();
 
     const {
       register,
@@ -59,9 +61,18 @@ const ChatInput: React.FC = () => {
     // Update messageContent when message changes
     useEffect(() => {
       setMessageContent(message);
-    }, [message]);
+      
+      // Send typing indicator when message content changes
+      if (isConnected && message.trim() !== '') {
+        sendTyping(conversationId);
+      }
+    }, [message, isConnected, sendTyping, conversationId]);
 
     const onSubmit: SubmitHandler<FieldValues> = async (data) => {
+      console.log("Form submitted with data:", data);
+      console.log("Attached files:", attachedFiles);
+      
+      // Clear form
       setValue('message', '', { shouldValidate: true });
       
       // Get all attached files
@@ -70,23 +81,26 @@ const ChatInput: React.FC = () => {
       // Clear files after sending
       setAttachedFiles([]);
       
-      await fetch('/api/messages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          content: data.message,
-          files: files, // Send array of file data
-          conversationId: conversationId
-        }),
-      });
-      const messageData = await response.json();
-      
-      // 3. Dispatch a local event to update your own UI immediately
-      window.dispatchEvent(new CustomEvent('new-message', { 
-        detail: messageData 
-      }));
+      try {
+        // Send message via HTTP API
+          await fetch('/api/messages', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            content: data.message,
+            files: files,
+            conversationId: conversationId
+          }),
+        });
+        // The server will broadcast the message via Socket.IO
+        // const socketSent = sendChatMessage(data.message, conversationId, files);
+        // No need to send it again from the client
+      } catch (error) {
+        console.error('Error sending message:', error);
+        // Handle error (show toast notification, etc.)
+      }
     }
   
     const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -157,6 +171,12 @@ const ChatInput: React.FC = () => {
     const removeAttachment = (index: number) => {
       setAttachedFiles(prev => prev.filter((_, i) => i !== index));
     };
+    // TODO: Add typing indicator
+    // const handleTyping = () => {
+    //   if (isConnected) {
+    //     sendTyping(conversationId);
+    //   }
+    // };
   
     return ( 
       <div 
@@ -253,6 +273,7 @@ const ChatInput: React.FC = () => {
                 rounded-full
                 focus:outline-none
               "
+              // onChange={handleTyping}
             />
             <div className="absolute right-2 top-1/2 -translate-y-1/2">
               <EmojiPopover onEmojiSelect={handleEmojiSelect}>

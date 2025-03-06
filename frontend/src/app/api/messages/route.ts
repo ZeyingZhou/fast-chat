@@ -8,7 +8,6 @@ export async function POST(request: Request) {
     const token = await getToken();
     const body = await request.json();
     
-    console.log(body);
     const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/messages?session_id=${sessionId}`, {
       method: 'POST',
       headers: {
@@ -21,7 +20,6 @@ export async function POST(request: Request) {
     if (!response.ok) {
       throw new Error('Failed to send message');
     }
-
     const data = await response.json();
     return NextResponse.json(data);
   } catch (error) {
