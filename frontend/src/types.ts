@@ -16,15 +16,38 @@ export interface DatabaseUser extends User {
 }
 
 // Base Message interface
+// export interface Message {
+//     id: string;
+//     conversationId: string;
+//     senderId: string;
+//     body: string | null;
+//     image?: string | null;
+//     createdAt: string;
+//     sender: User;
+// }
+
+
+export interface FileData {
+    id?: string;
+    url: string;
+    type: string;
+    name: string;
+    size?: number;
+  }
 export interface Message {
     id: string;
-    conversationId: string;
-    senderId: string;
-    body: string | null;
-    image?: string | null;
+    body: string;
     createdAt: string;
+    senderId: string;
+    conversationId: string;
     sender: User;
-}
+    files?: FileData[];
+    
+    // New properties for message status tracking
+    temp_id?: string;
+    status?: 'sending' | 'sent' | 'failed';
+    error?: string;
+  }
 
 // Base Conversation interface
 export interface Conversation {

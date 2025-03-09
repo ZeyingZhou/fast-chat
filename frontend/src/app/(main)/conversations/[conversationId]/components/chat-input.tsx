@@ -19,7 +19,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Image from "next/image";
 import { EmojiPopover } from "./emoji-popover";
-import { useSocket } from "@/hooks/use-socket";
+import { useSocket } from "@/providers/socket-provider";
+import { Message } from "@/types";
+import { useUser } from "@clerk/nextjs";
 
 
 // Define file data interface for better type safety
@@ -37,7 +39,8 @@ const ChatInput: React.FC = () => {
     const [attachedFiles, setAttachedFiles] = useState<FileData[]>([]);
     // Add a state to track the message content
     const [messageContent, setMessageContent] = useState('');
-    const { isConnected, sendTyping, sendChatMessage } = useSocket();
+    const { isConnected, sendMessage, socket } = useSocket();
+    const { user } = useUser();
 
     const {
       register,
@@ -63,43 +66,56 @@ const ChatInput: React.FC = () => {
       setMessageContent(message);
       
       // Send typing indicator when message content changes
-      if (isConnected && message.trim() !== '') {
-        sendTyping(conversationId);
-      }
-    }, [message, isConnected, sendTyping, conversationId]);
+    
+    }, [message, isConnected, conversationId]);
 
     const onSubmit: SubmitHandler<FieldValues> = async (data) => {
       console.log("Form submitted with data:", data);
       console.log("Attached files:", attachedFiles);
       
-      // Clear form
       setValue('message', '', { shouldValidate: true });
+      const filesUrl = attachedFiles.map(file => file.file_url);
       
-      // Get all attached files
-      const files = attachedFiles;
-      
-      // Clear files after sending
       setAttachedFiles([]);
       
       try {
-        // Send message via HTTP API
-          await fetch('/api/messages', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
+        if (isConnected && socket) {
+          // Create a temporary message for optimistic UI update
+          const tempMessage: Message = {
+            id: `temp-${Date.now()}`,
+            body: data.message,
+            createdAt: new Date().toISOString(),
+            senderId: user?.id || '',
+            conversationId,
+            sender: {
+              id: user?.id || '',
+              name: user?.fullName || '',
+              email: user?.primaryEmailAddress?.emailAddress || '',
+              image: user?.imageUrl || ''
+            },
+            files: filesUrl.map(url => ({
+              url,
+              type: 'image',
+              name: 'Attached file'
+            })),
+            status: 'sending'
+          };
+          
+          // Add the temporary message to the UI
+          // setMessages(current => [...current, tempMessage]);
+          
+          // Send the actual message
+          sendMessage('new message', {
+            user_id: user?.id,
+            conversationId,
             content: data.message,
-            files: files,
-            conversationId: conversationId
-          }),
-        });
-        // The server will broadcast the message via Socket.IO
-        // const socketSent = sendChatMessage(data.message, conversationId, files);
-        // No need to send it again from the client
+            filesUrl
+          });
+        } else {
+          console.error('Socket not connected');
+        }
       } catch (error) {
         console.error('Error sending message:', error);
-        // Handle error (show toast notification, etc.)
       }
     }
   
@@ -171,12 +187,6 @@ const ChatInput: React.FC = () => {
     const removeAttachment = (index: number) => {
       setAttachedFiles(prev => prev.filter((_, i) => i !== index));
     };
-    // TODO: Add typing indicator
-    // const handleTyping = () => {
-    //   if (isConnected) {
-    //     sendTyping(conversationId);
-    //   }
-    // };
   
     return ( 
       <div 

@@ -47,7 +47,7 @@ const MessageBox: React.FC<MessageBoxProps> = ({
   const message = cn(
     'text-sm w-fit overflow-hidden', 
     isOwn ? 'bg-sky-500 text-white' : 'bg-gray-100', 
-    data.image ? 'rounded-md p-0' : 'rounded-full py-2 px-3'
+    data.files && data.files.length > 0 ? 'rounded-md p-0' : 'rounded-full py-2 px-3'
   );
 
   return ( 
@@ -70,24 +70,7 @@ const MessageBox: React.FC<MessageBoxProps> = ({
           </div>
         </div>
         <div className={message}>
-          {data.image ? (
-            <Image
-              alt="Image"
-              height="288"
-              width="288"
-              onClick={() => setImageModalOpen(true)} 
-              src={data.image} 
-              className="
-                object-cover 
-                cursor-pointer 
-                hover:scale-110 
-                transition 
-                translate
-              "
-            />
-          ) : (
             <div>{data.body}</div>
-          )}
           {/* {data.file_url && (
             <div className="mt-2">
               {data.file_type?.startsWith('image/') ? (
@@ -129,6 +112,15 @@ const MessageBox: React.FC<MessageBoxProps> = ({
             {`Seen by ${seenList}`}
           </div>
         )} */}
+        {isOwn && data.status && (
+          <div className="text-xs text-gray-500 self-end ml-2">
+            {data.status === 'sending' && 'Sending...'}
+            {data.status === 'sent' && 'Sent'}
+            {data.status === 'failed' && (
+              <span className="text-red-500">Failed to send</span>
+            )}
+          </div>
+        )}
       </div>
     </div>
    );

@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import useConversation from "@/hooks/use-conversation";
 import { Message } from "@/types";
 import MessageBox from "./message-box";
-import { useSocket } from "@/hooks/use-socket";
+import { useSocket } from "@/providers/socket-provider";
 
 interface MessagesListProps {
     initialMessages: Message[];
@@ -14,54 +14,51 @@ const MessagesList: React.FC<MessagesListProps> = ({ initialMessages = [] }) => 
     const bottomRef = useRef<HTMLDivElement>(null);
     const [messages, setMessages] = useState(initialMessages ?? []);
     const { conversationId } = useConversation();
-    const { socket } = useSocket();
+    const { socket, isConnected, joinConversation, leaveConversation } = useSocket();
 
     // Scroll to bottom when messages change
     useEffect(() => {
-        bottomRef.current?.scrollIntoView();
+        bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages]);
 
-    // Join conversation room
-    useEffect(() => {
-        if (!socket) return;
+    // Join conversation room when component mounts
+    // useEffect(() => {
+    //     if (!socket || !isConnected || !conversationId) return;
         
-        console.log(`Joining conversation room: ${conversationId}`);
-        socket.emit('join_conversation', { conversationId });
-        
-        return () => {
-            console.log(`Leaving conversation room: ${conversationId}`);
-            socket.emit('leave_conversation', { conversationId });
-        };
-    }, [socket, conversationId]);
+    //     console.log(`Joining conversation room: ${conversationId}`);
+    //     joinConversation(conversationId);
+    //     console.log(socket);
+    //     return () => {
+    //         console.log(`Leaving conversation room: ${conversationId}`);
+    //         leaveConversation(conversationId);
+    //     };
+    // }, [socket, isConnected, conversationId, joinConversation, leaveConversation]);
 
-    // Listen for new messages - SEPARATE useEffect to avoid dependency issues
+    // Listen for new messages
     useEffect(() => {
-        if (!socket) return;
+        socket?.emit('list_rooms');
+        if (!socket || !isConnected || !conversationId) return;
         
-        console.log('Setting up message listener');
+        console.log('Setting up message listener for conversation:', conversationId);
         
         const handleMessage = (data: any) => {
-            console.log('Received message:', data);
+            console.log('Received message event:', data);
             
-            if (data.type === 'NEW_MESSAGE') {
-                const message = data.message;
-                if (message.conversationId === conversationId) {
-                    console.log('Adding new message to state');
-                    setMessages(current => [...current, message]);
-                }
-            } else if (data.conversationId === conversationId) {
-                console.log('Adding direct message to state');
-                setMessages(current => [...current, data]);
+            const message = data;
+            if (message.conversationId === conversationId) {
+                console.log('Adding new message to state:', message);
+                setMessages(current => [...current, message]);
             }
         };
         
-        socket.on('message', handleMessage);
+        // Listen for 'message received' event
+        socket.on('message received', handleMessage);
         
         return () => {
             console.log('Removing message listener');
-            socket.off('message', handleMessage);
+            socket.off('message received', handleMessage);
         };
-    }, [socket, conversationId]); // Don't include messages in dependencies
+    }, [socket, isConnected, conversationId]);
 
     return (
         <div className="flex-1 overflow-y-auto">
@@ -69,7 +66,7 @@ const MessagesList: React.FC<MessagesListProps> = ({ initialMessages = [] }) => 
                 messages.map((message, i) => (
                     <MessageBox 
                         isLast={i === messages.length - 1} 
-                        key={message.id} 
+                        key={message.id || i} 
                         data={message}
                     />
                 ))

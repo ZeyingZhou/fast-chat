@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google'
 import {
   ClerkProvider,
 } from '@clerk/nextjs'
+import { SocketProvider } from '@/providers/socket-provider';
 
 
 
@@ -17,7 +18,9 @@ const inter = Inter({ subsets: ['latin'] })
       <ClerkProvider afterSignOutUrl="/sign-in">
       <html lang="en">
         <body className={inter.className}>
-              {children}
+          <SocketProvider>
+            {children}
+          </SocketProvider>
         </body>
       </html>
       </ClerkProvider>
