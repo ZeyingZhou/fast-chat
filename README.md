@@ -150,6 +150,13 @@ uvicorn api.main:app --reload
    - user.deleted
 5. Copy the signing secret to your backend .env file
 
+6. Set up ngrok for webhook
+`https://ngrok.com/docs/getting-started/#step-1-install`
+```
+brew install ngrok
+ngrok config add-authtoken $YOUR_AUTHTOKEN
+ngrok http --url=renewing-skylark-handy.ngrok-free.app 8080
+```
 ### AWS Configuration
 
 1. Create an S3 bucket with appropriate CORS settings:
