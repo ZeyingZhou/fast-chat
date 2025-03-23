@@ -14,7 +14,7 @@ A modern, real-time messenger application built with Next.js, FastAPI, DynamoDB,
 
 ### Backend
 - **FastAPI** - Python API framework
-- **WebSockets** - Real-time communication
+- **Socket.IO** - Real-time communication
 - **Pydantic** - Data validation
 
 ### Authentication
@@ -67,8 +67,8 @@ The application follows a modern architecture with separate frontend and backend
    - FastAPI syncs user data to DynamoDB
 
 2. **Messaging**:
-   - Messages are sent from frontend to FastAPI
-   - FastAPI saves to DynamoDB and broadcasts via WebSocket
+   - Messages are sent from frontend to FastAPI thorough Socket.IO(client to server)
+   - FastAPI saves the message to DynamoDB and broadcasts via Socket.IO
 
 3. **File Uploads**:
    - Frontend requests presigned URL from FastAPI

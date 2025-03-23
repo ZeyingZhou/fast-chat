@@ -49,6 +49,7 @@ async def get_messages(
                 'conversationId': message['conversationId'],
                 'senderId': message['senderId'],
                 'body': message.get('body'),
+                'files': message.get('files'),
                 'image': message.get('image'),
                 'createdAt': message['createdAt'],
                 'sender': {
@@ -94,8 +95,6 @@ async def create_message(
 
     try:
         message_id = str(uuid.uuid4())
-        
-        # Basic message data for database
         message_data = {
             'id': message_id,
             'conversationId': data.conversationId,
@@ -116,7 +115,7 @@ async def create_message(
             # Convert Pydantic models to dictionaries for DynamoDB
             message_data['files'] = [file.dict() for file in data.files]
         
-        # Create message in database
+        # Create message
         messages_table.put_item(Item=message_data)
         
         # Update conversation lastMessageAt
@@ -129,7 +128,6 @@ async def create_message(
             }
         )
         
-        # Get sender info to include in response
         sender_response = users_table.get_item(Key={'id': current_user.user_id})
         sender = sender_response.get('Item', {})
         
@@ -147,8 +145,6 @@ async def create_message(
                 'image': sender.get('image')
             }
         }
-        
-        # Add file data if present
         if hasattr(data, 'file_url') and data.file_url:
             formatted_message['file_url'] = data.file_url
             formatted_message['file_type'] = data.file_type
@@ -158,14 +154,13 @@ async def create_message(
         # Add multiple files if present
         if hasattr(data, 'files') and data.files and len(data.files) > 0:
             formatted_message['files'] = [file.dict() for file in data.files]
-        
         # Broadcast to all users in the conversation
         try:
             print(f"Broadcasting message to conversation {data.conversationId}")
             await manager.broadcast_to_conversation(
                 {
                     'type': 'NEW_MESSAGE',
-                    'message': formatted_message  # Use the formatted message
+                    'message': formatted_message
                 },
                 data.conversationId,
                 exclude_user=current_user.user_id  # Don't send to the sender
@@ -174,7 +169,7 @@ async def create_message(
             print(f"Error broadcasting message: {str(e)}")
             # Continue - don't fail the API call if broadcasting fails
         
-        return formatted_message  # Return the formatted message
+        return message_data
     except Exception as e:
         print(f"Error creating message: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error creating message: {str(e)}")
