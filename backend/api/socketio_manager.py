@@ -94,7 +94,7 @@ class SocketIOManager:
                 if user != exclude_user:
                     print("sid: ", sid)
                     print("sid: ", self.active_connections[user], "exclude_sid: ", self.active_connections[exclude_user])
-                    await sio.emit('message received', message, room=conversation_id, skip_sid=sid)
+                    await sio.emit('message received', message, room=conversation_id)
 
         # if exclude_user and exclude_user in self.active_connections:
         #     exclude_sid = self.active_connections.get(exclude_user)
