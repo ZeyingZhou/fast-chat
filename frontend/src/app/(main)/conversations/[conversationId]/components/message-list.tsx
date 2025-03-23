@@ -5,6 +5,7 @@ import useConversation from "@/hooks/use-conversation";
 import { Message } from "@/types";
 import MessageBox from "./message-box";
 import { useSocket } from "@/providers/socket-provider";
+import { useUser } from "@clerk/nextjs";
 
 interface MessagesListProps {
     initialMessages: Message[];
@@ -14,6 +15,7 @@ const MessagesList: React.FC<MessagesListProps> = ({ initialMessages = [] }) => 
     const bottomRef = useRef<HTMLDivElement>(null);
     const [messages, setMessages] = useState(initialMessages ?? []);
     const { conversationId } = useConversation();
+    const { user } = useUser();
     const { socket, isConnected, joinConversation, leaveConversation } = useSocket();
 
     // Scroll to bottom when messages change
@@ -45,6 +47,9 @@ const MessagesList: React.FC<MessagesListProps> = ({ initialMessages = [] }) => 
             console.log('Received message event:', data);
             
             const message = data;
+            if(message.senderId === user?.id) {
+                console.log('Send Successfully');
+            }
             if (message.conversationId === conversationId) {
                 console.log('Adding new message to state:', message);
                 setMessages(current => [...current, message]);
